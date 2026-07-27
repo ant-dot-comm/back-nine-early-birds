@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:#16381a;text-decoration:none}
+a:hover{color:#a9812f}
+::-webkit-scrollbar{width:0;height:0}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#e7dcc6;padding:60px 44px 110px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#26221b">
+
+  <header style="max-width:1180px;margin:0 auto 56px;display:flex;flex-wrap:wrap;gap:32px;align-items:flex-end;justify-content:space-between;border-bottom:1px solid #cdbf9f;padding-bottom:34px">
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:640px">
+      <img src="uploads/back9earlybirds.svg" alt="Back 9 Early Birds" style="width:230px;height:auto;margin-left:-4px">
+      <p style="margin:6px 0 0;font:400 16px/1.55 'IBM Plex Sans';color:#5c5445">Mobile-first PWA for logging the back nine (holes 10–18) at Mission Trails. Hi-fi mockups built from a small, shared design system — warm, restrained, and readable in full sun.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;font:400 13px/1.5 'IBM Plex Sans';color:#7a7161;min-width:220px">
+      <span style="font:600 12px 'IBM Plex Sans';letter-spacing:.14em;text-transform:uppercase;color:#8a6620">Direction</span>
+      <span>Serif <b style="color:#26221b;font-weight:600">Lora</b> for headings &amp; wordmark</span>
+      <span>Sans <b style="color:#26221b;font-weight:600">IBM Plex Sans</b> for data &amp; numbers</span>
+      <span>Deep green primary · brass reserved for birdies &amp; records</span>
+    </div>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:64px 52px;justify-content:center;align-items:flex-start;max-width:1700px;margin:0 auto">
+
+    <!-- ===================== DESIGN SYSTEM STRIP ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;gap:20px;width:820px;max-width:100%">
+      <figcaption style="display:flex;align-items:center;gap:10px">
+        <span style="width:22px;height:22px;border-radius:50%;background:#16381a;color:#f4ecdd;font:600 11px 'IBM Plex Sans';display:grid;place-items:center">DS</span>
+        <span style="font:600 16px 'Lora';color:#16381a">Design system — tokens &amp; components</span>
+      </figcaption>
+      <div style="background:#f4ecdd;border:1px solid #d8cbb0;border-radius:22px;padding:26px 28px;display:flex;flex-direction:column;gap:26px">
+
+        <div style="display:flex;flex-wrap:wrap;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="width:110px;height:54px;border-radius:12px;background:#16381a"></span><span style="font:600 11px 'IBM Plex Sans';color:#5c5445">Green 900<br><span style="font-weight:400;color:#8a8272">#16381A · primary</span></span></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="width:110px;height:54px;border-radius:12px;background:#2f5233"></span><span style="font:600 11px 'IBM Plex Sans';color:#5c5445">Green 700<br><span style="font-weight:400;color:#8a8272">#2F5233</span></span></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="width:110px;height:54px;border-radius:12px;background:#a9812f"></span><span style="font:600 11px 'IBM Plex Sans';color:#5c5445">Brass<br><span style="font-weight:400;color:#8a8272">#A9812F · accent</span></span></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="width:110px;height:54px;border-radius:12px;background:#f4ecdd;border:1px solid #d8cbb0"></span><span style="font:600 11px 'IBM Plex Sans';color:#5c5445">Sand<br><span style="font-weight:400;color:#8a8272">#F4ECDD · bg</span></span></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="width:110px;height:54px;border-radius:12px;background:#fbf6ea;border:1px solid #d8cbb0"></span><span style="font:600 11px 'IBM Plex Sans';color:#5c5445">Surface<br><span style="font-weight:400;color:#8a8272">#FBF6EA · card</span></span></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="width:110px;height:54px;border-radius:12px;background:#26221b"></span><span style="font:600 11px 'IBM Plex Sans';color:#5c5445">Ink<br><span style="font-weight:400;color:#8a8272">#26221B · text</span></span></div>
+        </div>
+
+        <div style="height:1px;background:#e0d3b6"></div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.1em;text-transform:uppercase;color:#8a6620">Serif · Lora</span><span style="font:600 34px 'Lora';color:#16381a;line-height:1.1">Good morning, Mike.</span></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.1em;text-transform:uppercase;color:#8a6620">Sans · Plex — tabular</span><span style="font:600 34px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums;line-height:1.1">37 · +1 · 0123456789</span></div>
+        </div>
+
+        <div style="height:1px;background:#e0d3b6"></div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:30px;align-items:center">
+          <button style="height:52px;padding:0 26px;border:none;border-radius:14px;background:#16381a;color:#f4ecdd;font:600 15px 'IBM Plex Sans';cursor:pointer">Primary</button>
+          <button style="height:52px;padding:0 26px;border:1.5px solid #16381a;border-radius:14px;background:transparent;color:#16381a;font:600 15px 'IBM Plex Sans';cursor:pointer">Secondary</button>
+          <div style="display:flex;align-items:center;gap:10px"><button style="width:46px;height:46px;border-radius:13px;border:1.5px solid #16381a;background:transparent;color:#16381a;font:400 24px 'IBM Plex Sans';line-height:1;display:grid;place-items:center;cursor:pointer">−</button><span style="min-width:26px;text-align:center;font:600 26px 'IBM Plex Sans';font-variant-numeric:tabular-nums">4</span><button style="width:46px;height:46px;border-radius:13px;border:none;background:#16381a;color:#f4ecdd;font:400 24px 'IBM Plex Sans';line-height:1;display:grid;place-items:center;cursor:pointer">+</button></div>
+          <div style="display:flex;align-items:center;gap:10px"><span style="width:52px;height:30px;border-radius:20px;background:#16381a;position:relative"><span style="position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;background:#f4ecdd"></span></span><span style="width:52px;height:30px;border-radius:20px;background:#d8cbb0;position:relative"><span style="position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fffdf7"></span></span></div>
+          <div style="display:flex;flex-direction:column;gap:4px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:12px 16px;min-width:130px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.08em;text-transform:uppercase;color:#8a8272">Birdies</span><span style="font:600 28px 'IBM Plex Sans';color:#a9812f">7</span></div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ===================== 1 · SIGN IN ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <figcaption style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;background:#16381a;color:#f4ecdd;font:600 12px 'IBM Plex Sans';display:grid;place-items:center">1</span><span style="font:600 15px 'Lora';color:#16381a">Sign in</span></figcaption>
+      <div style="width:390px;flex:none;background:#14180f;border-radius:46px;padding:11px;box-shadow:0 40px 70px -30px rgba(20,25,12,.55),0 10px 24px rgba(0,0,0,.14)">
+        <div style="position:relative;background:#f4ecdd;border-radius:36px;overflow:hidden;height:820px;display:flex;flex-direction:column">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:118px;height:26px;background:#14180f;border-radius:0 0 16px 16px;z-index:5"></div>
+          <div style="height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 26px 0"><span style="font:600 15px 'IBM Plex Sans'">9:41</span><div style="display:flex;gap:6px;align-items:center"><span style="width:17px;height:11px;border:1.5px solid #26221b;border-radius:3px;opacity:.9"></span><span style="width:15px;height:11px;border-radius:2px;background:#26221b"></span></div></div>
+          <div style="flex:1;display:flex;flex-direction:column;padding:0 30px 40px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+              <img src="uploads/back9earlybirds.svg" alt="Back 9 Early Birds" style="width:252px;height:auto">
+              <span style="font:500 12px 'IBM Plex Sans';letter-spacing:.18em;text-transform:uppercase;color:#8a6620;margin-top:6px">Mission Trails · Members</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;flex-direction:column;gap:8px"><label style="font:600 13px 'IBM Plex Sans';color:#5c5445">Email</label><input value="mike.d@email.com" style="height:56px;border-radius:14px;border:1.5px solid #d8cbb0;background:#fffdf7;padding:0 18px;font:400 17px 'IBM Plex Sans';color:#26221b;outline:none"></div>
+              <button style="height:58px;border:none;border-radius:14px;background:#16381a;color:#f4ecdd;font:600 17px 'IBM Plex Sans';cursor:pointer" style-hover="background:#1f4a25">Send magic link</button>
+              <p style="text-align:center;font:400 13px/1.5 'IBM Plex Sans';color:#8a8272;margin:6px 0 0">No password. We'll email you a one-tap link to sign in.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ===================== 1b · CHECK EMAIL ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <figcaption style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;background:#a9812f;color:#f4ecdd;font:600 12px 'IBM Plex Sans';display:grid;place-items:center">1b</span><span style="font:600 15px 'Lora';color:#16381a">Check your email</span></figcaption>
+      <div style="width:390px;flex:none;background:#14180f;border-radius:46px;padding:11px;box-shadow:0 40px 70px -30px rgba(20,25,12,.55),0 10px 24px rgba(0,0,0,.14)">
+        <div style="position:relative;background:#f4ecdd;border-radius:36px;overflow:hidden;height:820px;display:flex;flex-direction:column">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:118px;height:26px;background:#14180f;border-radius:0 0 16px 16px;z-index:5"></div>
+          <div style="height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 26px 0"><span style="font:600 15px 'IBM Plex Sans'">9:41</span><div style="display:flex;gap:6px;align-items:center"><span style="width:17px;height:11px;border:1.5px solid #26221b;border-radius:3px;opacity:.9"></span><span style="width:15px;height:11px;border-radius:2px;background:#26221b"></span></div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 40px 60px;gap:18px">
+            <div style="width:88px;height:88px;border-radius:26px;background:#eee0c2;display:grid;place-items:center">
+              <span style="position:relative;width:44px;height:32px;border:2.5px solid #16381a;border-radius:6px;overflow:hidden;display:block"><span style="position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-top:20px solid #16381a"></span></span>
+            </div>
+            <h2 style="margin:6px 0 0;font:600 27px 'Lora';color:#16381a">Check your email</h2>
+            <p style="margin:0;font:400 16px/1.6 'IBM Plex Sans';color:#5c5445">We sent a magic link to<br><b style="color:#26221b;font-weight:600">mike.d@email.com</b>.<br>Tap it on this phone to sign in.</p>
+            <button style="margin-top:8px;height:52px;padding:0 24px;border:1.5px solid #16381a;border-radius:14px;background:transparent;color:#16381a;font:600 15px 'IBM Plex Sans';cursor:pointer">Resend link</button>
+            <a href="#" style="font:500 14px 'IBM Plex Sans';color:#8a8272;margin-top:2px">Use a different email</a>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ===================== 2 · SET DISPLAY NAME ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <figcaption style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;background:#16381a;color:#f4ecdd;font:600 12px 'IBM Plex Sans';display:grid;place-items:center">2</span><span style="font:600 15px 'Lora';color:#16381a">Set display name</span></figcaption>
+      <div style="width:390px;flex:none;background:#14180f;border-radius:46px;padding:11px;box-shadow:0 40px 70px -30px rgba(20,25,12,.55),0 10px 24px rgba(0,0,0,.14)">
+        <div style="position:relative;background:#f4ecdd;border-radius:36px;overflow:hidden;height:820px;display:flex;flex-direction:column">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:118px;height:26px;background:#14180f;border-radius:0 0 16px 16px;z-index:5"></div>
+          <div style="height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 26px 0"><span style="font:600 15px 'IBM Plex Sans'">9:41</span><div style="display:flex;gap:6px;align-items:center"><span style="width:17px;height:11px;border:1.5px solid #26221b;border-radius:3px;opacity:.9"></span><span style="width:15px;height:11px;border-radius:2px;background:#26221b"></span></div></div>
+          <div style="flex:1;display:flex;flex-direction:column;padding:36px 30px 40px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+              <div style="width:64px;height:64px;border-radius:50%;background:#16381a;color:#d8b25a;font:700 26px 'IBM Plex Sans';display:grid;place-items:center">9</div>
+              <h1 style="margin:14px 0 0;font:600 32px/1.15 'Lora';color:#16381a">Welcome to the group</h1>
+              <p style="margin:0;font:400 16px/1.55 'IBM Plex Sans';color:#5c5445">How should we list you on the leaderboard and round summaries?</p>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px"><label style="font:600 13px 'IBM Plex Sans';color:#5c5445">Display name</label><input value="Mike D." style="height:56px;border-radius:14px;border:1.5px solid #16381a;background:#fffdf7;padding:0 18px;font:500 18px 'IBM Plex Sans';color:#26221b;outline:none"></div>
+              <p style="margin:2px 0 0;font:400 13px 'IBM Plex Sans';color:#8a8272">Most members use a first name and last initial.</p>
+            </div>
+            <button style="height:58px;border:none;border-radius:14px;background:#16381a;color:#f4ecdd;font:600 17px 'IBM Plex Sans';cursor:pointer" style-hover="background:#1f4a25">Continue</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ===================== 3 · HOME ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <figcaption style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;background:#16381a;color:#f4ecdd;font:600 12px 'IBM Plex Sans';display:grid;place-items:center">3</span><span style="font:600 15px 'Lora';color:#16381a">Home</span></figcaption>
+      <div style="width:390px;flex:none;background:#14180f;border-radius:46px;padding:11px;box-shadow:0 40px 70px -30px rgba(20,25,12,.55),0 10px 24px rgba(0,0,0,.14)">
+        <div style="position:relative;background:#f4ecdd;border-radius:36px;overflow:hidden;height:820px;display:flex;flex-direction:column">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:118px;height:26px;background:#14180f;border-radius:0 0 16px 16px;z-index:5"></div>
+          <div style="height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 26px 0"><span style="font:600 15px 'IBM Plex Sans'">9:41</span><div style="display:flex;gap:6px;align-items:center"><span style="width:17px;height:11px;border:1.5px solid #26221b;border-radius:3px;opacity:.9"></span><span style="width:15px;height:11px;border-radius:2px;background:#26221b"></span></div></div>
+          <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 24px 4px"><div style="display:flex;align-items:center;gap:8px"><span style="font:700 18px 'IBM Plex Sans';letter-spacing:.02em;color:#16381a">BACK</span><span style="width:27px;height:27px;border-radius:50%;background:#16381a;color:#d8b25a;font:700 15px 'IBM Plex Sans';display:grid;place-items:center">9</span></div><span style="width:38px;height:38px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 14px 'IBM Plex Sans';display:grid;place-items:center">MD</span></div>
+          <div style="flex:1;overflow-y:auto;padding:18px 24px 30px;display:flex;flex-direction:column;gap:22px">
+            <div><h1 style="margin:0;font:600 30px/1.1 'Lora';color:#16381a">Good morning, Mike.</h1><p style="margin:6px 0 0;font:400 15px 'IBM Plex Sans';color:#7a7161">Early birds tee off Saturday at 6:40am.</p></div>
+            <button style="height:64px;border:none;border-radius:16px;background:#16381a;color:#f4ecdd;font:600 18px 'IBM Plex Sans';display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer" style-hover="background:#1f4a25"><span style="position:relative;width:16px;height:20px;display:inline-block"><span style="position:absolute;left:2px;top:0;bottom:0;width:2px;background:#d8b25a"></span><span style="position:absolute;left:4px;top:1px;width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:11px solid #d8b25a"></span></span>Log a round</button>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1;background:#fbf6ea;border:1px solid #eaddc2;border-radius:16px;padding:16px 16px 15px;display:flex;flex-direction:column;gap:4px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.08em;text-transform:uppercase;color:#8a8272">Birdies this season</span><span style="font:600 34px 'IBM Plex Sans';color:#a9812f;line-height:1">7</span></div>
+              <div style="flex:1;background:#fbf6ea;border:1px solid #eaddc2;border-radius:16px;padding:16px 16px 15px;display:flex;flex-direction:column;gap:4px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.08em;text-transform:uppercase;color:#8a8272">Rounds played</span><span style="font:600 34px 'IBM Plex Sans';color:#16381a;line-height:1">12</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between"><h2 style="margin:0;font:600 19px 'Lora';color:#16381a">Recent rounds</h2><a href="#7" style="font:500 13px 'IBM Plex Sans';color:#a9812f">See all</a></div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:14px 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px 'IBM Plex Sans';color:#26221b">Sat, Jul 20</span><span style="font:400 13px 'IBM Plex Sans';color:#8a8272">4 players · Mission Trails</span></div><div style="display:flex;align-items:baseline;gap:6px"><span style="font:600 20px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">35</span><span style="font:600 13px 'IBM Plex Sans';color:#a9812f">−1</span></div></div>
+                <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:14px 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px 'IBM Plex Sans';color:#26221b">Sat, Jul 13</span><span style="font:400 13px 'IBM Plex Sans';color:#8a8272">5 players · Mission Trails</span></div><div style="display:flex;align-items:baseline;gap:6px"><span style="font:600 20px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">38</span><span style="font:500 13px 'IBM Plex Sans';color:#8a8272">+2</span></div></div>
+                <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:14px 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px 'IBM Plex Sans';color:#26221b">Sat, Jul 6</span><span style="font:400 13px 'IBM Plex Sans';color:#8a8272">4 players · Mission Trails</span></div><div style="display:flex;align-items:baseline;gap:6px"><span style="font:600 20px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">34</span><span style="font:600 13px 'IBM Plex Sans';color:#a9812f">−2</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ===================== 4 · NEW ROUND ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <figcaption style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;background:#16381a;color:#f4ecdd;font:600 12px 'IBM Plex Sans';display:grid;place-items:center">4</span><span style="font:600 15px 'Lora';color:#16381a">New round</span></figcaption>
+      <div style="width:390px;flex:none;background:#14180f;border-radius:46px;padding:11px;box-shadow:0 40px 70px -30px rgba(20,25,12,.55),0 10px 24px rgba(0,0,0,.14)">
+        <div style="position:relative;background:#f4ecdd;border-radius:36px;overflow:hidden;height:820px;display:flex;flex-direction:column">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:118px;height:26px;background:#14180f;border-radius:0 0 16px 16px;z-index:5"></div>
+          <div style="height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 26px 0"><span style="font:600 15px 'IBM Plex Sans'">9:41</span><div style="display:flex;gap:6px;align-items:center"><span style="width:17px;height:11px;border:1.5px solid #26221b;border-radius:3px;opacity:.9"></span><span style="width:15px;height:11px;border-radius:2px;background:#26221b"></span></div></div>
+          <div style="flex:none;display:flex;align-items:center;gap:10px;padding:6px 20px 10px"><span style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer"><span style="width:11px;height:11px;border-left:2px solid #16381a;border-bottom:2px solid #16381a;transform:rotate(45deg);display:block;margin-left:4px"></span></span><h1 style="margin:0;font:600 20px 'Lora';color:#16381a">New round</h1></div>
+          <div style="flex:1;overflow-y:auto;padding:8px 24px 24px;display:flex;flex-direction:column;gap:22px">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <span style="font:500 11px 'IBM Plex Sans';letter-spacing:.1em;text-transform:uppercase;color:#8a6620">Date</span>
+              <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:16px 18px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px 'IBM Plex Sans';color:#26221b">Today · Sat, Jul 27</span><span style="font:400 13px 'IBM Plex Sans';color:#8a8272">Mission Trails · Back 9</span></div><span style="width:9px;height:9px;border-right:2px solid #8a8272;border-bottom:2px solid #8a8272;transform:rotate(-45deg);display:block"></span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.1em;text-transform:uppercase;color:#8a6620">Who's playing</span><span style="font:500 13px 'IBM Plex Sans';color:#7a7161">4 selected</span></div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:14px;background:#f0e8d6;border:1.5px solid #16381a;border-radius:14px;padding:12px 16px"><span style="width:38px;height:38px;border-radius:50%;background:#16381a;color:#d8b25a;font:600 14px 'IBM Plex Sans';display:grid;place-items:center">MD</span><div style="flex:1;display:flex;flex-direction:column"><span style="font:600 16px 'IBM Plex Sans';color:#26221b">Mike D.</span><span style="font:400 12px 'IBM Plex Sans';color:#8a8272">You</span></div><span style="width:26px;height:26px;border-radius:50%;background:#16381a;display:grid;place-items:center"><span style="width:11px;height:6px;border-left:2px solid #f4ecdd;border-bottom:2px solid #f4ecdd;transform:rotate(-45deg);display:block;margin-top:-2px"></span></span></div>
+                <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:12px 16px"><span style="width:38px;height:38px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 14px 'IBM Plex Sans';display:grid;place-items:center">S</span><span style="flex:1;font:600 16px 'IBM Plex Sans';color:#26221b">Sal</span><span style="width:26px;height:26px;border-radius:50%;background:#16381a;display:grid;place-items:center"><span style="width:11px;height:6px;border-left:2px solid #f4ecdd;border-bottom:2px solid #f4ecdd;transform:rotate(-45deg);display:block;margin-top:-2px"></span></span></div>
+                <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:12px 16px"><span style="width:38px;height:38px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 14px 'IBM Plex Sans';display:grid;place-items:center">TR</span><span style="flex:1;font:600 16px 'IBM Plex Sans';color:#26221b">Tony R.</span><span style="width:26px;height:26px;border-radius:50%;background:#16381a;display:grid;place-items:center"><span style="width:11px;height:6px;border-left:2px solid #f4ecdd;border-bottom:2px solid #f4ecdd;transform:rotate(-45deg);display:block;margin-top:-2px"></span></span></div>
+                <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:12px 16px"><span style="width:38px;height:38px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 14px 'IBM Plex Sans';display:grid;place-items:center">C</span><span style="flex:1;font:600 16px 'IBM Plex Sans';color:#26221b">Coach</span><span style="width:26px;height:26px;border-radius:50%;border:2px solid #c9b797;background:#fffdf7"></span></div>
+                <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:12px 16px"><span style="width:38px;height:38px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 14px 'IBM Plex Sans';display:grid;place-items:center">BE</span><span style="flex:1;font:600 16px 'IBM Plex Sans';color:#26221b">Big Ed</span><span style="width:26px;height:26px;border-radius:50%;background:#16381a;display:grid;place-items:center"><span style="width:11px;height:6px;border-left:2px solid #f4ecdd;border-bottom:2px solid #f4ecdd;transform:rotate(-45deg);display:block;margin-top:-2px"></span></span></div>
+              </div>
+            </div>
+          </div>
+          <div style="flex:none;padding:14px 24px 28px;background:linear-gradient(#f4ecdd00,#f4ecdd 24%)"><button style="width:100%;height:58px;border:none;border-radius:14px;background:#16381a;color:#f4ecdd;font:600 17px 'IBM Plex Sans';cursor:pointer" style-hover="background:#1f4a25">Start round</button></div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ===================== 5 · SCORE ENTRY (LIVE) ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <figcaption style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;background:#a9812f;color:#f4ecdd;font:600 12px 'IBM Plex Sans';display:grid;place-items:center">5</span><span style="font:600 15px 'Lora';color:#16381a">Score entry — try the steppers ↓</span></figcaption>
+      <div style="width:390px;flex:none;background:#14180f;border-radius:46px;padding:11px;box-shadow:0 40px 70px -30px rgba(20,25,12,.55),0 10px 24px rgba(0,0,0,.14)">
+        <div style="position:relative;background:#f4ecdd;border-radius:36px;overflow:hidden;height:820px;display:flex;flex-direction:column">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:118px;height:26px;background:#14180f;border-radius:0 0 16px 16px;z-index:5"></div>
+          <div style="height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 26px 0"><span style="font:600 15px 'IBM Plex Sans'">9:41</span><div style="display:flex;gap:6px;align-items:center"><span style="width:17px;height:11px;border:1.5px solid #26221b;border-radius:3px;opacity:.9"></span><span style="width:15px;height:11px;border-radius:2px;background:#26221b"></span></div></div>
+          <div style="flex:none;display:flex;align-items:center;gap:10px;padding:6px 18px 12px"><span style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer"><span style="width:11px;height:11px;border-left:2px solid #16381a;border-bottom:2px solid #16381a;transform:rotate(45deg);display:block;margin-left:4px"></span></span><div style="flex:1;display:flex;flex-direction:column"><h1 style="margin:0;font:600 19px 'Lora';color:#16381a">Your scorecard</h1><span style="font:400 12px 'IBM Plex Sans';color:#8a8272">Mission Trails · Back 9 · Jul 27</span></div><span style="font:600 12px 'IBM Plex Sans';color:#8a6620;background:#f0e4c6;border:1px solid #e0cd9e;padding:5px 11px;border-radius:20px">Holes 10–18</span></div>
+          <div style="flex:1;overflow-y:auto;padding:2px 16px 16px;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ holeRows }}" as="row" hint-placeholder-count="9">
+              <div style="display:flex;align-items:center;gap:12px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:16px;padding:12px 12px 12px 14px">
+                <div style="flex:none;width:44px;display:flex;flex-direction:column;align-items:center;gap:3px"><span style="width:42px;height:42px;border-radius:13px;background:#16381a;color:#f4ecdd;font:600 19px 'IBM Plex Sans';display:grid;place-items:center;font-variant-numeric:tabular-nums">{{ row.num }}</span><span style="font:500 11px 'IBM Plex Sans';color:#8a8272">{{ row.parLabel }}</span></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:7px;min-width:0">
+                  <sc-if value="{{ row.underPar }}" hint-placeholder-val="{{ false }}"><span style="align-self:flex-start;font:600 10px 'IBM Plex Sans';letter-spacing:.09em;text-transform:uppercase;color:#8a6620;background:#f0e4c6;border:1px solid #e0cd9e;padding:3px 9px;border-radius:20px">{{ row.diffLabel }}</span></sc-if>
+                  <sc-if value="{{ row.girShown }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;align-items:center;gap:9px">
+                      <span style="font:600 12px 'IBM Plex Sans';color:#5c5445">GIR</span>
+                      <sc-if value="{{ row.gir }}" hint-placeholder-val="{{ true }}"><button onClick="{{ row.toggleGir }}" style="width:52px;height:30px;border-radius:20px;border:none;background:#16381a;position:relative;cursor:pointer"><span style="position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;background:#f4ecdd"></span></button></sc-if>
+                      <sc-if value="{{ row.girOff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ row.toggleGir }}" style="width:52px;height:30px;border-radius:20px;border:none;background:#d8cbb0;position:relative;cursor:pointer"><span style="position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fffdf7"></span></button></sc-if>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="flex:none;display:flex;align-items:center;gap:10px"><button onClick="{{ row.dec }}" style="width:48px;height:48px;border-radius:14px;border:1.5px solid #16381a;background:transparent;color:#16381a;font:400 26px 'IBM Plex Sans';line-height:1;display:grid;place-items:center;cursor:pointer">−</button><span style="min-width:30px;text-align:center;font:600 30px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">{{ row.strokes }}</span><button onClick="{{ row.inc }}" style="width:48px;height:48px;border-radius:14px;border:none;background:#16381a;color:#f4ecdd;font:400 26px 'IBM Plex Sans';line-height:1;display:grid;place-items:center;cursor:pointer">+</button></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="flex:none;background:#16381a;color:#f4ecdd;padding:16px 20px 26px;display:flex;align-items:center;gap:16px">
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.12em;text-transform:uppercase;color:#9fb39a">Through 9</span><div style="display:flex;align-items:baseline;gap:10px"><span style="font:600 34px 'IBM Plex Sans';font-variant-numeric:tabular-nums;line-height:1">{{ total }}</span><span style="font:600 17px 'IBM Plex Sans';color:#d8b25a">{{ toParLabel }}</span></div></div>
+            <button style="margin-left:auto;height:52px;padding:0 26px;border:none;border-radius:14px;background:#d8b25a;color:#2a2410;font:600 16px 'IBM Plex Sans';cursor:pointer" style-hover="background:#e3bf6a">Save round</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ===================== 6 · ROUND SUMMARY ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <figcaption style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;background:#16381a;color:#f4ecdd;font:600 12px 'IBM Plex Sans';display:grid;place-items:center">6</span><span style="font:600 15px 'Lora';color:#16381a">Round summary</span></figcaption>
+      <div style="width:390px;flex:none;background:#14180f;border-radius:46px;padding:11px;box-shadow:0 40px 70px -30px rgba(20,25,12,.55),0 10px 24px rgba(0,0,0,.14)">
+        <div style="position:relative;background:#f4ecdd;border-radius:36px;overflow:hidden;height:820px;display:flex;flex-direction:column">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:118px;height:26px;background:#14180f;border-radius:0 0 16px 16px;z-index:5"></div>
+          <div style="height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 26px 0"><span style="font:600 15px 'IBM Plex Sans'">9:41</span><div style="display:flex;gap:6px;align-items:center"><span style="width:17px;height:11px;border:1.5px solid #26221b;border-radius:3px;opacity:.9"></span><span style="width:15px;height:11px;border-radius:2px;background:#26221b"></span></div></div>
+          <div style="flex:none;display:flex;align-items:center;gap:10px;padding:6px 20px 10px"><span style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer"><span style="width:11px;height:11px;border-left:2px solid #16381a;border-bottom:2px solid #16381a;transform:rotate(45deg);display:block;margin-left:4px"></span></span><h1 style="margin:0;font:600 20px 'Lora';color:#16381a">Round summary</h1></div>
+          <div style="flex:1;overflow-y:auto;padding:8px 22px 26px;display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;flex-direction:column;gap:3px"><span style="font:600 22px 'Lora';color:#16381a">Sat · Jul 27, 2026</span><span style="font:400 13px 'IBM Plex Sans';color:#8a8272">Mission Trails · Back 9 · 5 players</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:12px;background:#fbf6ea;border:1.5px solid #a9812f;border-radius:14px;padding:13px 16px"><span style="width:34px;height:34px;border-radius:50%;background:#16381a;color:#d8b25a;font:600 13px 'IBM Plex Sans';display:grid;place-items:center">MD</span><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 16px 'IBM Plex Sans';color:#26221b">Mike D.</span><span style="font:500 12px 'IBM Plex Sans';color:#a9812f">2 birdies · Low round</span></div><div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 24px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">37</span><span style="font:600 14px 'IBM Plex Sans';color:#a9812f">+1</span></div></div>
+              <div style="display:flex;align-items:center;gap:12px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:13px 16px"><span style="width:34px;height:34px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 13px 'IBM Plex Sans';display:grid;place-items:center">TR</span><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 16px 'IBM Plex Sans';color:#26221b">Tony R.</span><span style="font:500 12px 'IBM Plex Sans';color:#8a8272">1 birdie</span></div><div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 24px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">39</span><span style="font:500 14px 'IBM Plex Sans';color:#8a8272">+3</span></div></div>
+              <div style="display:flex;align-items:center;gap:12px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:13px 16px"><span style="width:34px;height:34px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 13px 'IBM Plex Sans';display:grid;place-items:center">BE</span><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 16px 'IBM Plex Sans';color:#26221b">Big Ed</span><span style="font:500 12px 'IBM Plex Sans';color:#8a8272">1 birdie</span></div><div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 24px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">40</span><span style="font:500 14px 'IBM Plex Sans';color:#8a8272">+4</span></div></div>
+              <div style="display:flex;align-items:center;gap:12px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:13px 16px"><span style="width:34px;height:34px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 13px 'IBM Plex Sans';display:grid;place-items:center">S</span><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 16px 'IBM Plex Sans';color:#26221b">Sal</span><span style="font:500 12px 'IBM Plex Sans';color:#8a8272">—</span></div><div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 24px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">41</span><span style="font:500 14px 'IBM Plex Sans';color:#8a8272">+5</span></div></div>
+              <div style="display:flex;align-items:center;gap:12px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:13px 16px"><span style="width:34px;height:34px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 13px 'IBM Plex Sans';display:grid;place-items:center">C</span><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 16px 'IBM Plex Sans';color:#26221b">Coach</span><span style="font:500 12px 'IBM Plex Sans';color:#8a8272">—</span></div><div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 24px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">44</span><span style="font:500 14px 'IBM Plex Sans';color:#8a8272">+8</span></div></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <span style="font:500 11px 'IBM Plex Sans';letter-spacing:.1em;text-transform:uppercase;color:#8a6620">Mike D. — hole by hole</span>
+              <div style="background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:12px 12px;display:flex;flex-direction:column;gap:6px">
+                <div style="display:grid;grid-template-columns:repeat(9,1fr) 46px;gap:4px"><span style="text-align:center;font:500 11px 'IBM Plex Sans';color:#8a8272">10</span><span style="text-align:center;font:500 11px 'IBM Plex Sans';color:#8a8272">11</span><span style="text-align:center;font:500 11px 'IBM Plex Sans';color:#8a8272">12</span><span style="text-align:center;font:500 11px 'IBM Plex Sans';color:#8a8272">13</span><span style="text-align:center;font:500 11px 'IBM Plex Sans';color:#8a8272">14</span><span style="text-align:center;font:500 11px 'IBM Plex Sans';color:#8a8272">15</span><span style="text-align:center;font:500 11px 'IBM Plex Sans';color:#8a8272">16</span><span style="text-align:center;font:500 11px 'IBM Plex Sans';color:#8a8272">17</span><span style="text-align:center;font:500 11px 'IBM Plex Sans';color:#8a8272">18</span><span style="text-align:center;font:600 11px 'IBM Plex Sans';color:#16381a">Out</span></div>
+                <div style="display:grid;grid-template-columns:repeat(9,1fr) 46px;gap:4px"><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">4</span><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#8a6620;background:#f0e4c6;border:1px solid #e0cd9e;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">2</span><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">5</span><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">5</span><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">4</span><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">4</span><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#8a6620;background:#f0e4c6;border:1px solid #e0cd9e;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">3</span><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">4</span><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">6</span><span style="text-align:center;font:600 16px 'IBM Plex Sans';color:#f4ecdd;background:#16381a;font-variant-numeric:tabular-nums;padding:5px 0;border-radius:8px">37</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ===================== 7 · STATS ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:18px" id="7">
+      <figcaption style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;background:#16381a;color:#f4ecdd;font:600 12px 'IBM Plex Sans';display:grid;place-items:center">7</span><span style="font:600 15px 'Lora';color:#16381a">Stats</span></figcaption>
+      <div style="width:390px;flex:none;background:#14180f;border-radius:46px;padding:11px;box-shadow:0 40px 70px -30px rgba(20,25,12,.55),0 10px 24px rgba(0,0,0,.14)">
+        <div style="position:relative;background:#f4ecdd;border-radius:36px;overflow:hidden;height:820px;display:flex;flex-direction:column">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:118px;height:26px;background:#14180f;border-radius:0 0 16px 16px;z-index:5"></div>
+          <div style="height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 26px 0"><span style="font:600 15px 'IBM Plex Sans'">9:41</span><div style="display:flex;gap:6px;align-items:center"><span style="width:17px;height:11px;border:1.5px solid #26221b;border-radius:3px;opacity:.9"></span><span style="width:15px;height:11px;border-radius:2px;background:#26221b"></span></div></div>
+          <div style="flex:none;padding:6px 24px 10px"><h1 style="margin:0;font:600 24px 'Lora';color:#16381a">Group stats</h1><span style="font:400 13px 'IBM Plex Sans';color:#8a8272">2026 season · 12 rounds</span></div>
+          <div style="flex:1;overflow-y:auto;padding:6px 22px 26px;display:flex;flex-direction:column;gap:22px">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <span style="font:600 15px 'Lora';color:#16381a">Birdie leaderboard</span>
+              <div style="display:flex;flex-direction:column;gap:11px">
+                <div style="display:flex;align-items:center;gap:12px"><span style="width:56px;font:600 14px 'IBM Plex Sans';color:#26221b">Mike D.</span><span style="flex:1;height:20px;background:#e6dbc0;border-radius:6px;overflow:hidden"><span style="display:block;height:100%;width:100%;background:#16381a;border-radius:6px"></span></span><span style="width:22px;text-align:right;font:600 16px 'IBM Plex Sans';color:#a9812f;font-variant-numeric:tabular-nums">7</span></div>
+                <div style="display:flex;align-items:center;gap:12px"><span style="width:56px;font:600 14px 'IBM Plex Sans';color:#26221b">Tony R.</span><span style="flex:1;height:20px;background:#e6dbc0;border-radius:6px;overflow:hidden"><span style="display:block;height:100%;width:71%;background:#2f5233;border-radius:6px"></span></span><span style="width:22px;text-align:right;font:600 16px 'IBM Plex Sans';color:#a9812f;font-variant-numeric:tabular-nums">5</span></div>
+                <div style="display:flex;align-items:center;gap:12px"><span style="width:56px;font:600 14px 'IBM Plex Sans';color:#26221b">Sal</span><span style="flex:1;height:20px;background:#e6dbc0;border-radius:6px;overflow:hidden"><span style="display:block;height:100%;width:57%;background:#2f5233;border-radius:6px"></span></span><span style="width:22px;text-align:right;font:600 16px 'IBM Plex Sans';color:#a9812f;font-variant-numeric:tabular-nums">4</span></div>
+                <div style="display:flex;align-items:center;gap:12px"><span style="width:56px;font:600 14px 'IBM Plex Sans';color:#26221b">Big Ed</span><span style="flex:1;height:20px;background:#e6dbc0;border-radius:6px;overflow:hidden"><span style="display:block;height:100%;width:43%;background:#2f5233;border-radius:6px"></span></span><span style="width:22px;text-align:right;font:600 16px 'IBM Plex Sans';color:#a9812f;font-variant-numeric:tabular-nums">3</span></div>
+                <div style="display:flex;align-items:center;gap:12px"><span style="width:56px;font:600 14px 'IBM Plex Sans';color:#26221b">Coach</span><span style="flex:1;height:20px;background:#e6dbc0;border-radius:6px;overflow:hidden"><span style="display:block;height:100%;width:29%;background:#2f5233;border-radius:6px"></span></span><span style="width:22px;text-align:right;font:600 16px 'IBM Plex Sans';color:#a9812f;font-variant-numeric:tabular-nums">2</span></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:14px 15px;display:flex;flex-direction:column;gap:3px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.06em;text-transform:uppercase;color:#8a8272">GIR · Hole 10</span><span style="font:600 28px 'IBM Plex Sans';color:#16381a;line-height:1">58%</span><span style="font:400 12px 'IBM Plex Sans';color:#8a8272">7 of 12 rounds</span></div>
+              <div style="flex:1;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:14px 15px;display:flex;flex-direction:column;gap:3px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.06em;text-transform:uppercase;color:#8a8272">GIR · Hole 17</span><span style="font:600 28px 'IBM Plex Sans';color:#16381a;line-height:1">42%</span><span style="font:400 12px 'IBM Plex Sans';color:#8a8272">5 of 12 rounds</span></div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1;background:#16381a;border-radius:14px;padding:14px 15px;display:flex;flex-direction:column;gap:3px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.06em;text-transform:uppercase;color:#9fb39a">Low round</span><span style="font:600 26px 'IBM Plex Sans';color:#d8b25a;line-height:1.1">33 <span style="font-size:15px">−3</span></span><span style="font:400 12px 'IBM Plex Sans';color:#c8d3c3">Mike D. · Jun 14</span></div>
+              <div style="flex:1;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:14px 15px;display:flex;flex-direction:column;gap:3px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.06em;text-transform:uppercase;color:#8a8272">Best attendance</span><span style="font:600 26px 'IBM Plex Sans';color:#16381a;line-height:1.1">Coach</span><span style="font:400 12px 'IBM Plex Sans';color:#8a8272">14 of 12 · never misses</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <span style="font:600 15px 'Lora';color:#16381a">Round history</span>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <div style="display:flex;align-items:center;gap:12px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:12px;padding:12px 15px"><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 14px 'IBM Plex Sans';color:#26221b">Sat, Jul 20</span><span style="font:400 12px 'IBM Plex Sans';color:#8a8272">Mike D. won</span></div><div style="display:flex;align-items:baseline;gap:6px"><span style="font:600 17px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">35</span><span style="font:600 12px 'IBM Plex Sans';color:#a9812f">−1</span></div></div>
+                <div style="display:flex;align-items:center;gap:12px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:12px;padding:12px 15px"><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 14px 'IBM Plex Sans';color:#26221b">Sat, Jul 13</span><span style="font:400 12px 'IBM Plex Sans';color:#8a8272">Tony R. won</span></div><div style="display:flex;align-items:baseline;gap:6px"><span style="font:600 17px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">36</span><span style="font:500 12px 'IBM Plex Sans';color:#8a8272">E</span></div></div>
+                <div style="display:flex;align-items:center;gap:12px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:12px;padding:12px 15px"><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 14px 'IBM Plex Sans';color:#26221b">Sat, Jul 6</span><span style="font:400 12px 'IBM Plex Sans';color:#8a8272">Mike D. won</span></div><div style="display:flex;align-items:baseline;gap:6px"><span style="font:600 17px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">34</span><span style="font:600 12px 'IBM Plex Sans';color:#a9812f">−2</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ===================== DESKTOP FRAME ===================== -->
+    <figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:18px;width:100%">
+      <figcaption style="display:flex;align-items:center;gap:10px"><span style="padding:3px 9px;border-radius:6px;background:#16381a;color:#f4ecdd;font:600 11px 'IBM Plex Sans'">≥1024px</span><span style="font:600 15px 'Lora';color:#16381a">Large screen — app centered in a max-width column (no multi-column redesign)</span></figcaption>
+      <div style="width:1080px;max-width:100%;border-radius:20px;overflow:hidden;background:#dccdb0;box-shadow:0 40px 80px -30px rgba(20,25,12,.5),0 12px 30px rgba(0,0,0,.12)">
+        <div style="height:44px;background:#efe4cd;border-bottom:1px solid #cdbf9f;display:flex;align-items:center;gap:8px;padding:0 18px"><span style="width:11px;height:11px;border-radius:50%;background:#d98b7a"></span><span style="width:11px;height:11px;border-radius:50%;background:#e0c07a"></span><span style="width:11px;height:11px;border-radius:50%;background:#9fbf88"></span><span style="margin-left:14px;flex:1;max-width:360px;height:24px;border-radius:12px;background:#f4ecdd;display:flex;align-items:center;padding:0 12px;font:400 12px 'IBM Plex Sans';color:#8a8272">back9earlybirds.app</span></div>
+        <div style="padding:44px 0;display:flex;justify-content:center;background:#e7dcc6">
+          <div style="width:480px;background:#f4ecdd;border-radius:28px;box-shadow:0 20px 50px -24px rgba(20,25,12,.4);overflow:hidden;display:flex;flex-direction:column">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 26px 6px"><div style="display:flex;align-items:center;gap:8px"><span style="font:700 19px 'IBM Plex Sans';letter-spacing:.02em;color:#16381a">BACK</span><span style="width:28px;height:28px;border-radius:50%;background:#16381a;color:#d8b25a;font:700 16px 'IBM Plex Sans';display:grid;place-items:center">9</span></div><span style="width:40px;height:40px;border-radius:50%;background:#e3d3af;color:#5c4a1e;font:600 15px 'IBM Plex Sans';display:grid;place-items:center">MD</span></div>
+            <div style="padding:14px 26px 30px;display:flex;flex-direction:column;gap:22px">
+              <div><h1 style="margin:0;font:600 32px/1.1 'Lora';color:#16381a">Good morning, Mike.</h1><p style="margin:6px 0 0;font:400 15px 'IBM Plex Sans';color:#7a7161">Early birds tee off Saturday at 6:40am.</p></div>
+              <button style="height:64px;border:none;border-radius:16px;background:#16381a;color:#f4ecdd;font:600 18px 'IBM Plex Sans';display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer" style-hover="background:#1f4a25"><span style="position:relative;width:16px;height:20px;display:inline-block"><span style="position:absolute;left:2px;top:0;bottom:0;width:2px;background:#d8b25a"></span><span style="position:absolute;left:4px;top:1px;width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:11px solid #d8b25a"></span></span>Log a round</button>
+              <div style="display:flex;gap:12px">
+                <div style="flex:1;background:#fbf6ea;border:1px solid #eaddc2;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:4px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.08em;text-transform:uppercase;color:#8a8272">Birdies this season</span><span style="font:600 34px 'IBM Plex Sans';color:#a9812f;line-height:1">7</span></div>
+                <div style="flex:1;background:#fbf6ea;border:1px solid #eaddc2;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:4px"><span style="font:500 11px 'IBM Plex Sans';letter-spacing:.08em;text-transform:uppercase;color:#8a8272">Rounds played</span><span style="font:600 34px 'IBM Plex Sans';color:#16381a;line-height:1">12</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><h2 style="margin:0;font:600 19px 'Lora';color:#16381a">Recent rounds</h2><a href="#7" style="font:500 13px 'IBM Plex Sans';color:#a9812f">See all</a></div>
+                <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:14px 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px 'IBM Plex Sans';color:#26221b">Sat, Jul 20</span><span style="font:400 13px 'IBM Plex Sans';color:#8a8272">4 players · Mission Trails</span></div><div style="display:flex;align-items:baseline;gap:6px"><span style="font:600 20px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">35</span><span style="font:600 13px 'IBM Plex Sans';color:#a9812f">−1</span></div></div>
+                <div style="display:flex;align-items:center;gap:14px;background:#fbf6ea;border:1px solid #eaddc2;border-radius:14px;padding:14px 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px 'IBM Plex Sans';color:#26221b">Sat, Jul 13</span><span style="font:400 13px 'IBM Plex Sans';color:#8a8272">5 players · Mission Trails</span></div><div style="display:flex;align-items:baseline;gap:6px"><span style="font:600 20px 'IBM Plex Sans';color:#26221b;font-variant-numeric:tabular-nums">38</span><span style="font:500 13px 'IBM Plex Sans';color:#8a8272">+2</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    strokes: { 10: 4, 11: 2, 12: 5, 13: 5, 14: 4, 15: 4, 16: 3, 17: 4, 18: 6 },
+    gir: { 10: true, 17: false },
+  };
+  pars = { 10: 4, 11: 3, 12: 4, 13: 5, 14: 4, 15: 3, 16: 4, 17: 4, 18: 5 };
+  girHoles = { 10: true, 17: true };
+
+  step(h, d) {
+    this.setState(s => {
+      const v = Math.max(1, Math.min(12, (s.strokes[h] ?? this.pars[h]) + d));
+      return { strokes: { ...s.strokes, [h]: v } };
+    });
+  }
+  toggleGir(h) {
+    this.setState(s => ({ gir: { ...s.gir, [h]: !s.gir[h] } }));
+  }
+
+  renderVals() {
+    const rows = [];
+    let total = 0, parTotal = 0;
+    for (let h = 10; h <= 18; h++) {
+      const par = this.pars[h];
+      const st = this.state.strokes[h];
+      total += st; parTotal += par;
+      const under = st <= par - 1;
+      let diff = '';
+      if (st <= par - 2) diff = 'Eagle';
+      else if (st === par - 1) diff = 'Birdie';
+      rows.push({
+        num: h, par, parLabel: 'Par ' + par, strokes: st,
+        underPar: under, diffLabel: diff,
+        girShown: !!this.girHoles[h],
+        gir: !!this.state.gir[h], girOff: !this.state.gir[h],
+        inc: () => this.step(h, 1),
+        dec: () => this.step(h, -1),
+        toggleGir: () => this.toggleGir(h),
+      });
+    }
+    const d = total - parTotal;
+    const toParLabel = d === 0 ? 'E' : (d > 0 ? '+' + d : '' + d);
+    return { holeRows: rows, total, toParLabel };
+  }
+}
+</script>
+</body>
+</html>
