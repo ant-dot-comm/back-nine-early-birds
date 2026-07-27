@@ -1,0 +1,43 @@
+<!--
+  Back 9 Early Birds — "Confirm signup" email template (first-time sign-in).
+  Paste the markup below into Supabase → Authentication → Email Templates → Confirm signup.
+  Subject:  Confirm your spot with the Early Birds
+  Supabase replaces {{ .ConfirmationURL }} with the confirm-and-sign-in link.
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background:#e7dcc6;margin:0;padding:32px 12px;font-family:Helvetica,Arial,sans-serif;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+             style="max-width:460px;background:#f4ecdd;border:1px solid #d8cbb0;border-radius:22px;overflow:hidden;">
+        <tr>
+          <td style="background:#16381a;padding:26px 32px;">
+            <span style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:700;color:#f4ecdd;">Back&nbsp;9</span>
+            <span style="display:inline-block;margin-left:8px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#d8b25a;">Early Birds</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:34px 32px 12px;">
+            <h1 style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:600;color:#16381a;">Welcome to the group</h1>
+            <p style="margin:0 0 26px;font-size:15px;line-height:1.6;color:#5c5445;">You're one tap from joining the Early Birds at Mission Trails. Confirm your email to finish signing up and start logging your back nine.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="border-radius:14px;background:#16381a;">
+                  <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:16px 30px;font-size:16px;font-weight:600;color:#f4ecdd;text-decoration:none;border-radius:14px;">Confirm &amp; sign in</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:26px 0 0;font-size:13px;line-height:1.6;color:#8a8272;">If the button doesn't work, copy and paste this link:<br>
+              <a href="{{ .ConfirmationURL }}" style="color:#a9812f;word-break:break-all;">{{ .ConfirmationURL }}</a>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:22px 32px 30px;border-top:1px solid #e0d3b6;">
+            <p style="margin:0;font-size:12px;line-height:1.6;color:#8a8272;">You're receiving this because this email was used to sign up for Back 9 Early Birds at Mission Trails. If that wasn't you, you can safely ignore it — the link expires shortly.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
