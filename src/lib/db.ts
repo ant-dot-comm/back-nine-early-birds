@@ -7,6 +7,8 @@ import type {
   RoundDetail,
   HoleScore,
   RoundMode,
+  Member,
+  ScoreShare,
 } from "./types";
 import { formatRoundDate } from "./date";
 
@@ -88,6 +90,40 @@ export async function addPlayer(name: string): Promise<Player> {
     .single();
   if (error) throw error;
   return data;
+}
+
+// ---- members (other signed-up users) ----------------------------------------
+
+export async function listMembers(): Promise<Member[]> {
+  const { data, error } = await supabase
+    .from("members")
+    .select("id, display_name, initials")
+    .order("display_name", { ascending: true });
+  if (error) throw error;
+  return (data as Member[]) ?? [];
+}
+
+/** Get-or-create a roster player linked to a member account. */
+export async function addMemberPlayer(member: Member): Promise<Player> {
+  const { data: existing } = await supabase
+    .from("players")
+    .select("*")
+    .eq("member_user_id", member.id)
+    .maybeSingle();
+  if (existing) return existing as Player;
+
+  const { data, error } = await supabase
+    .from("players")
+    .insert({
+      name: member.display_name,
+      initials: member.initials,
+      is_self: false,
+      member_user_id: member.id,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Player;
 }
 
 // ---- rounds -----------------------------------------------------------------
@@ -275,6 +311,98 @@ export async function claimInvite(token: string): Promise<string> {
 export function inviteLink(token: string, first: string, last: string): string {
   const q = new URLSearchParams({ invite: token, first, last });
   return `${window.location.origin}/login?${q.toString()}`;
+}
+
+// ---- score shares to signed-up members --------------------------------------
+
+/** On finalize, push each member-player's card to their account as a pending share. */
+export async function pushMemberShares(roundId: string, fromDisplay: string): Promise<void> {
+  const detail = await getRoundDetail(roundId);
+  const memberPlayers = detail.players.filter((p) => p.member_user_id && !p.is_self);
+  if (memberPlayers.length === 0) return;
+
+  // Idempotent: clear any prior shares for this round before re-inserting.
+  await supabase.from("score_shares").delete().eq("round_id", roundId);
+
+  const rows = memberPlayers.map((p) => ({
+    to_user: p.member_user_id,
+    from_display: fromDisplay,
+    round_id: roundId,
+    played_on: detail.round.played_on,
+    course: detail.round.course,
+    mode: detail.round.mode,
+    scores: detail.scores
+      .filter((s) => s.player_id === p.id)
+      .sort((a, b) => a.hole - b.hole)
+      .map((s) => ({ hole: s.hole, par: s.par, strokes: s.strokes, gir: s.gir })),
+  }));
+  const { error } = await supabase.from("score_shares").insert(rows);
+  if (error) throw error;
+}
+
+export async function listPendingShares(): Promise<ScoreShare[]> {
+  const { data: u } = await supabase.auth.getUser();
+  const me = u.user?.id;
+  if (!me) return [];
+  const { data, error } = await supabase
+    .from("score_shares")
+    .select("*")
+    .eq("to_user", me)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data as ScoreShare[]) ?? [];
+}
+
+/** Accept a shared score: copy it into my account as a finished round. */
+export async function acceptShare(shareId: string): Promise<string> {
+  const { data: share, error } = await supabase
+    .from("score_shares")
+    .select("*")
+    .eq("id", shareId)
+    .single();
+  if (error) throw error;
+  const s = share as ScoreShare;
+
+  const { data: selfp } = await supabase
+    .from("players")
+    .select("id")
+    .eq("is_self", true)
+    .maybeSingle();
+  if (!selfp) throw new Error("No profile yet");
+
+  const { data: round, error: rErr } = await supabase
+    .from("rounds")
+    .insert({ played_on: s.played_on, course: s.course, mode: s.mode, is_final: true })
+    .select()
+    .single();
+  if (rErr) throw rErr;
+
+  await supabase.from("round_players").insert({ round_id: round.id, player_id: selfp.id });
+  await supabase.from("hole_scores").insert(
+    s.scores.map((x) => ({
+      round_id: round.id,
+      player_id: selfp.id,
+      hole: x.hole,
+      par: x.par,
+      strokes: x.strokes,
+      gir: x.gir,
+      saved: true,
+    }))
+  );
+  await supabase
+    .from("score_shares")
+    .update({ status: "accepted", accepted_round_id: round.id })
+    .eq("id", shareId);
+  return round.id as string;
+}
+
+export async function dismissShare(shareId: string): Promise<void> {
+  const { error } = await supabase
+    .from("score_shares")
+    .update({ status: "dismissed" })
+    .eq("id", shareId);
+  if (error) throw error;
 }
 
 // ---- home / stats -----------------------------------------------------------

@@ -13,6 +13,27 @@ export interface Player {
   name: string;
   initials: string;
   is_self: boolean;
+  member_user_id: string | null;
+  created_at: string;
+}
+
+/** A signed-up member (from the public members view). */
+export interface Member {
+  id: string;
+  display_name: string;
+  initials: string;
+}
+
+export interface ScoreShare {
+  id: string;
+  from_user: string;
+  to_user: string;
+  from_display: string | null;
+  played_on: string;
+  course: string;
+  mode: RoundMode;
+  scores: { hole: number; par: number; strokes: number; gir: boolean }[];
+  status: "pending" | "accepted" | "dismissed";
   created_at: string;
 }
 

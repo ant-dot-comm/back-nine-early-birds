@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, claimInvite } from "../lib/db";
+import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, claimInvite, listPendingShares, acceptShare, dismissShare } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
+import type { ScoreShare } from "../lib/types";
 import { Avatar, StatCard, FullSpinner } from "../components/ui";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { toParLabel, modeLabel } from "../lib/course";
+import { toParLabel, modeLabel, parTotalFor } from "../lib/course";
 import { formatRoundDate } from "../lib/date";
 import { getPendingInvite, clearPendingInvite } from "../lib/invite";
 
@@ -22,6 +23,8 @@ export default function Home() {
   const [stats, setStats] = useState<SeasonStats | null>(null);
   const [rounds, setRounds] = useState<RoundSummaryRow[] | null>(null);
   const [drafts, setDrafts] = useState<RoundSummaryRow[]>([]);
+  const [shares, setShares] = useState<ScoreShare[]>([]);
+  const [busyShare, setBusyShare] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -29,6 +32,27 @@ export default function Home() {
     getSeasonStats().then(setStats).catch(() => setStats(null));
     listRecentRounds(5).then(setRounds).catch(() => setRounds([]));
     listDraftRounds().then(setDrafts).catch(() => setDrafts([]));
+    listPendingShares().then(setShares).catch(() => setShares([]));
+  }
+
+  async function accept(s: ScoreShare) {
+    setBusyShare(s.id);
+    try {
+      await acceptShare(s.id);
+      setShares((prev) => prev.filter((x) => x.id !== s.id));
+      load();
+    } finally {
+      setBusyShare(null);
+    }
+  }
+  async function dismiss(s: ScoreShare) {
+    setBusyShare(s.id);
+    try {
+      await dismissShare(s.id);
+      setShares((prev) => prev.filter((x) => x.id !== s.id));
+    } finally {
+      setBusyShare(null);
+    }
   }
 
   useEffect(() => {
@@ -85,6 +109,39 @@ export default function Home() {
             </span>
             Log a round
           </button>
+
+          {/* Shared with you — pending scores from other members */}
+          {shares.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>Shared with you</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {shares.map((s) => {
+                  const total = s.scores.reduce((a, x) => a + x.strokes, 0);
+                  const diff = total - parTotalFor(s.scores.map((x) => x.hole));
+                  return (
+                    <div key={s.id} className="card" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12, border: "1.5px solid var(--brass)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                          <span style={{ font: "600 15px var(--sans)", color: "var(--ink)" }}>{s.from_display ?? "A friend"} shared a round</span>
+                          <span style={{ font: "400 13px var(--sans)", color: "var(--faint)" }}>{formatRoundDate(s.played_on)} · {modeLabel(s.mode)}</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                          <span className="tnum" style={{ font: "600 20px var(--sans)", color: "var(--ink)" }}>{total}</span>
+                          <span style={{ font: "600 13px var(--sans)", color: diff < 0 ? "var(--brass)" : "var(--faint)" }}>{toParLabel(diff)}</span>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button className="btn sm" style={{ flex: 1, height: 46 }} onClick={() => accept(s)} disabled={busyShare === s.id}>
+                          {busyShare === s.id ? <span className="spin on-dark" /> : "Add to my rounds"}
+                        </button>
+                        <button className="btn ghost sm" style={{ height: 46 }} onClick={() => dismiss(s)} disabled={busyShare === s.id}>Dismiss</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* In-progress rounds */}
           {drafts.length > 0 && (

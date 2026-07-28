@@ -1,64 +1,97 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listPlayers, addPlayer, createRound, listRecentRounds } from "../lib/db";
+import { useAuth } from "../context/AuthContext";
+import {
+  listPlayers, addPlayer, addMemberPlayer, listMembers, createRound, listRecentRounds,
+} from "../lib/db";
 import type { RoundSummaryRow } from "../lib/db";
-import type { Player, RoundMode } from "../lib/types";
+import type { Player, Member, RoundMode } from "../lib/types";
 import { Avatar, TopBar, FullSpinner, ErrorNote } from "../components/ui";
+import AddPlayerModal from "../components/AddPlayerModal";
 import { formatRoundDate, todayYMD } from "../lib/date";
 import { modeLabel, toParLabel } from "../lib/course";
 
 export default function NewRound() {
   const navigate = useNavigate();
-  const [players, setPlayers] = useState<Player[] | null>(null);
+  const { session } = useAuth();
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [priorRounds, setPriorRounds] = useState<RoundSummaryRow[]>([]);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [mode, setMode] = useState<RoundMode>("back9");
   const [compareId, setCompareId] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [newName, setNewName] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const date = todayYMD();
 
   useEffect(() => {
-    listPlayers()
-      .then((p) => {
-        setPlayers(p);
-        const self = p.find((x) => x.is_self);
-        setSelected(new Set(self ? [self.id] : []));
+    Promise.all([listPlayers(), listMembers(), listRecentRounds(10)])
+      .then(([ps, ms, rr]) => {
+        setPlayers(ps);
+        setMembers(ms);
+        setPriorRounds(rr);
+        const self = ps.find((x) => x.is_self);
+        setSelectedIds(self ? [self.id] : []);
       })
-      .catch(() => setPlayers([]));
-    listRecentRounds(10).then(setPriorRounds).catch(() => setPriorRounds([]));
+      .catch(() => setError("Couldn't load players."))
+      .finally(() => setLoading(false));
   }, []);
 
-  function toggle(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const selectedPlayers = useMemo(
+    () =>
+      selectedIds
+        .map((id) => players.find((p) => p.id === id))
+        .filter((p): p is Player => !!p)
+        .sort((a, b) => Number(b.is_self) - Number(a.is_self)),
+    [selectedIds, players]
+  );
+
+  const selectedMemberIds = new Set(
+    selectedPlayers.map((p) => p.member_user_id).filter(Boolean) as string[]
+  );
+
+  // Candidates for the add sheet (exclude self and already-selected).
+  const memberCandidates = members.filter(
+    (m) => m.id !== session?.user.id && !selectedMemberIds.has(m.id)
+  );
+  const peopleCandidates = players.filter(
+    (p) => !p.is_self && !p.member_user_id && !selectedIds.includes(p.id)
+  );
+
+  function select(id: string) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  }
+  function remove(id: string) {
+    setSelectedIds((prev) => prev.filter((x) => x !== id));
   }
 
-  async function submitNewPlayer() {
-    const clean = newName.trim();
-    if (clean.length < 1) return;
+  async function onAddMember(m: Member) {
     try {
-      const p = await addPlayer(clean);
-      setPlayers((prev) => [...(prev ?? []), p]);
-      setSelected((prev) => new Set(prev).add(p.id));
-      setNewName("");
-      setAdding(false);
+      const p = await addMemberPlayer(m);
+      setPlayers((prev) => (prev.some((x) => x.id === p.id) ? prev : [...prev, p]));
+      select(p.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not add member.");
+    }
+  }
+  async function onAddNew(name: string) {
+    try {
+      const p = await addPlayer(name);
+      setPlayers((prev) => [...prev, p]);
+      select(p.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add player.");
     }
   }
 
   async function start() {
-    if (selected.size === 0) return setError("Pick at least one player.");
+    if (selectedIds.length === 0) return setError("Pick at least one player.");
     setStarting(true);
     setError(null);
     try {
-      const id = await createRound(date, [...selected], mode, compareId);
+      const id = await createRound(date, selectedIds, mode, compareId);
       navigate(`/rounds/${id}/score`, { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start the round.");
@@ -69,7 +102,7 @@ export default function NewRound() {
   return (
     <div className="screen fade">
       <TopBar title="New round" onBack="auto" />
-      {players === null ? (
+      {loading ? (
         <FullSpinner />
       ) : (
         <>
@@ -78,33 +111,11 @@ export default function NewRound() {
               {/* Format */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <span className="eyebrow">Format</span>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 4,
-                    background: "var(--surface)",
-                    border: "1px solid var(--line)",
-                    borderRadius: 14,
-                    padding: 4,
-                  }}
-                >
+                <div style={{ display: "flex", gap: 4, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 4 }}>
                   {(["back9", "full18"] as RoundMode[]).map((m) => {
                     const on = mode === m;
                     return (
-                      <button
-                        key={m}
-                        onClick={() => setMode(m)}
-                        style={{
-                          flex: 1,
-                          height: 44,
-                          borderRadius: 11,
-                          border: "none",
-                          cursor: "pointer",
-                          font: "600 15px var(--sans)",
-                          background: on ? "var(--green-900)" : "transparent",
-                          color: on ? "var(--sand)" : "var(--muted)",
-                        }}
-                      >
+                      <button key={m} onClick={() => setMode(m)} style={{ flex: 1, height: 44, borderRadius: 11, border: "none", cursor: "pointer", font: "600 15px var(--sans)", background: on ? "var(--green-900)" : "transparent", color: on ? "var(--sand)" : "var(--muted)" }}>
                         {modeLabel(m)}
                       </button>
                     );
@@ -130,76 +141,40 @@ export default function NewRound() {
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
                   <span className="eyebrow">Who's playing</span>
-                  <span style={{ font: "500 13px var(--sans)", color: "var(--muted-2)" }}>{selected.size} selected</span>
+                  <span style={{ font: "500 13px var(--sans)", color: "var(--muted-2)" }}>{selectedIds.length} selected</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {players.map((p) => {
-                    const on = selected.has(p.id);
-                    return (
-                      <button
-                        key={p.id}
-                        onClick={() => toggle(p.id)}
-                        className="card"
-                        style={{
-                          display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
-                          cursor: "pointer", textAlign: "left", width: "100%",
-                          background: on ? "#f0e8d6" : "var(--surface)",
-                          border: on ? "1.5px solid var(--green-900)" : "1px solid var(--line)",
-                        }}
-                      >
-                        <Avatar initials={p.initials} me={p.is_self} />
-                        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                          <span style={{ font: "600 16px var(--sans)", color: "var(--ink)" }}>{p.name}</span>
-                          {p.is_self && <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>You</span>}
-                        </div>
-                        <Check on={on} />
-                      </button>
-                    );
-                  })}
-
-                  {adding ? (
-                    <div className="card" style={{ display: "flex", gap: 8, padding: "10px 12px", alignItems: "center" }}>
-                      <input
-                        className="input" style={{ height: 46, flex: 1 }} autoFocus placeholder="Name"
-                        value={newName} onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") submitNewPlayer();
-                          if (e.key === "Escape") { setAdding(false); setNewName(""); }
-                        }}
-                      />
-                      <button className="btn sm" style={{ height: 46, padding: "0 18px" }} onClick={submitNewPlayer}>Add</button>
-                      <button
-                        aria-label="Cancel"
-                        onClick={() => { setAdding(false); setNewName(""); }}
-                        style={{ width: 46, height: 46, flex: "none", borderRadius: 12, border: "1.5px solid var(--line-2)", background: "transparent", color: "var(--muted-2)", cursor: "pointer", font: "400 22px var(--sans)", lineHeight: 1 }}
-                      >
-                        ×
-                      </button>
+                  {selectedPlayers.map((p) => (
+                    <div key={p.id} className="card" style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px" }}>
+                      <Avatar initials={p.initials} me={p.is_self} />
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                        <span style={{ font: "600 16px var(--sans)", color: "var(--ink)" }}>{p.name}</span>
+                        <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>
+                          {p.is_self ? "You" : p.member_user_id ? "Member" : "Guest"}
+                        </span>
+                      </div>
+                      {!p.is_self && (
+                        <button aria-label={`Remove ${p.name}`} onClick={() => remove(p.id)} style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: "transparent", color: "var(--muted-2)", cursor: "pointer", font: "400 20px var(--sans)", lineHeight: 1 }}>×</button>
+                      )}
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => setAdding(true)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
-                        borderRadius: "var(--r-card)", border: "1.5px dashed var(--line-2)",
-                        background: "transparent", cursor: "pointer", width: "100%",
-                      }}
-                    >
-                      <span style={{ width: 38, height: 38, borderRadius: "50%", border: "1.5px solid var(--line-2)", display: "grid", placeItems: "center", font: "400 22px var(--sans)", color: "var(--muted-2)" }}>+</span>
-                      <span style={{ font: "600 15px var(--sans)", color: "var(--muted)" }}>Add a player</span>
-                    </button>
-                  )}
+                  ))}
+
+                  <button
+                    onClick={() => setShowAdd(true)}
+                    style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: "var(--r-card)", border: "1.5px dashed var(--line-2)", background: "transparent", cursor: "pointer", width: "100%" }}
+                  >
+                    <span style={{ width: 38, height: 38, borderRadius: "50%", border: "1.5px solid var(--line-2)", display: "grid", placeItems: "center", font: "400 22px var(--sans)", color: "var(--muted-2)" }}>+</span>
+                    <span style={{ font: "600 15px var(--sans)", color: "var(--muted)" }}>Add a player</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Compare to a previous round */}
+              {/* Compare */}
               {priorRounds.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     <span className="eyebrow">Challenge yourself</span>
-                    <span style={{ font: "400 13px var(--sans)", color: "var(--faint)" }}>
-                      Compare each hole against a past round.
-                    </span>
+                    <span style={{ font: "400 13px var(--sans)", color: "var(--faint)" }}>Compare each hole against a past round.</span>
                   </div>
                   <div style={{ position: "relative" }}>
                     <select
@@ -232,14 +207,17 @@ export default function NewRound() {
           </div>
         </>
       )}
-    </div>
-  );
-}
 
-function Check({ on }: { on: boolean }) {
-  return (
-    <span style={{ width: 26, height: 26, borderRadius: "50%", flex: "none", display: "grid", placeItems: "center", background: on ? "var(--green-900)" : "#fffdf7", border: on ? "none" : "2px solid #c9b797" }}>
-      {on && <span style={{ width: 11, height: 6, borderLeft: "2px solid var(--sand)", borderBottom: "2px solid var(--sand)", transform: "rotate(-45deg)", marginTop: -2, display: "block" }} />}
-    </span>
+      {showAdd && (
+        <AddPlayerModal
+          members={memberCandidates}
+          people={peopleCandidates}
+          onAddMember={onAddMember}
+          onAddExisting={(p) => select(p.id)}
+          onAddNew={onAddNew}
+          onClose={() => setShowAdd(false)}
+        />
+      )}
+    </div>
   );
 }

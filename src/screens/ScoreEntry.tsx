@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getRoundDetail, updateHole, finalizeRound } from "../lib/db";
+import { getRoundDetail, updateHole, finalizeRound, pushMemberShares } from "../lib/db";
+import { useAuth } from "../context/AuthContext";
 import type { Player, RoundMode, RoundDetail } from "../lib/types";
 import {
   holesForMode, parTotalFor, PARS, toParLabel, holeDiffLabel, isBirdieOrBetter, holesLabel,
@@ -20,6 +21,7 @@ interface Cell {
 export default function ScoreEntry() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
   const [playedOn, setPlayedOn] = useState<string>("");
   const [mode, setMode] = useState<RoundMode>("back9");
@@ -110,6 +112,12 @@ export default function ScoreEntry() {
     setError(null);
     try {
       await finalizeRound(id);
+      // Push each member-player's card to their account as a pending share.
+      try {
+        await pushMemberShares(id, profile?.display_name ?? "A friend");
+      } catch {
+        /* non-fatal — the round is still saved */
+      }
       navigate(`/rounds/${id}`, { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save the round.");
