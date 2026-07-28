@@ -97,9 +97,11 @@ Deno.serve(async (req: Request) => {
     const total = scores.reduce((s, x) => s + (x.strokes ?? 0), 0);
     const par = scores.reduce((s, x) => s + (x.par ?? 0), 0);
     const link =
-      `${SITE}/login?invite=${inv.token}` +
+      `${SITE}/join?invite=${inv.token}` +
+      `&email=${encodeURIComponent(inv.recipient_email ?? "")}` +
       `&first=${encodeURIComponent(inv.prefill_first ?? "")}` +
-      `&last=${encodeURIComponent(inv.prefill_last ?? "")}`;
+      `&last=${encodeURIComponent(inv.prefill_last ?? "")}` +
+      `&from=${encodeURIComponent(inv.inviter_display ?? "A friend")}`;
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

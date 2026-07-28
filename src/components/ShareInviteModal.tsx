@@ -53,7 +53,7 @@ export default function ShareInviteModal({
         scores,
       });
       const [first, ...rest] = player.name.trim().split(/\s+/);
-      setLink(inviteLink(token, first ?? "", rest.join(" ")));
+      setLink(inviteLink(token, { email: addr, first: first ?? "", last: rest.join(" "), from: inviterDisplay }));
       // Best-effort email; if the mailer isn't set up, the link still works.
       try {
         await sendInviteEmail(token);

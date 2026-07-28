@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { FullSpinner } from "./components/ui";
 import SignIn from "./screens/SignIn";
@@ -10,9 +10,20 @@ import ScoreEntry from "./screens/ScoreEntry";
 import Summary from "./screens/Summary";
 import Stats from "./screens/Stats";
 import Account from "./screens/Account";
+import JoinInvite from "./screens/JoinInvite";
 
 export default function App() {
   const { loading, session, profile, recovery } = useAuth();
+  const location = useLocation();
+
+  // Invite landing: reachable in any auth state (handles its own sign-up flow).
+  if (location.pathname === "/join") {
+    return (
+      <div className="app">
+        <JoinInvite />
+      </div>
+    );
+  }
 
   let content;
 

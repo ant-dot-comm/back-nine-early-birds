@@ -308,9 +308,16 @@ export async function claimInvite(token: string): Promise<string> {
   return data as string;
 }
 
-export function inviteLink(token: string, first: string, last: string): string {
-  const q = new URLSearchParams({ invite: token, first, last });
-  return `${window.location.origin}/login?${q.toString()}`;
+export function inviteLink(
+  token: string,
+  opts: { email?: string; first?: string; last?: string; from?: string } = {}
+): string {
+  const q = new URLSearchParams({ invite: token });
+  if (opts.email) q.set("email", opts.email);
+  if (opts.first) q.set("first", opts.first);
+  if (opts.last) q.set("last", opts.last);
+  if (opts.from) q.set("from", opts.from);
+  return `${window.location.origin}/join?${q.toString()}`;
 }
 
 // ---- score shares to signed-up members --------------------------------------

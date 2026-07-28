@@ -1,5 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 
 export function Logo({ width = 210 }: { width?: number }) {
   return (
@@ -213,17 +215,7 @@ export function TopBar({
             cursor: "pointer",
           }}
         >
-          <span
-            style={{
-              width: 11,
-              height: 11,
-              borderLeft: "2px solid var(--green-900)",
-              borderBottom: "2px solid var(--green-900)",
-              transform: "rotate(45deg)",
-              marginLeft: 4,
-              display: "block",
-            }}
-          />
+          <FontAwesomeIcon icon={faChevronLeft} style={{ color: "var(--green-900)", fontSize: 18 }} />
         </button>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>

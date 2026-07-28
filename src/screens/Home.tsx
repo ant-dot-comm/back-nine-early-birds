@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, claimInvite, listPendingShares, acceptShare, dismissShare } from "../lib/db";
+import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
 import type { ScoreShare } from "../lib/types";
-import { Avatar, StatCard, FullSpinner } from "../components/ui";
+import { Avatar, StatCard, FullSpinner, Logo } from "../components/ui";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrashCan, faFlag } from "@fortawesome/free-solid-svg-icons";
 import { toParLabel, modeLabel, parTotalFor } from "../lib/course";
 import { formatRoundDate } from "../lib/date";
-import { getPendingInvite, clearPendingInvite } from "../lib/invite";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -56,16 +57,6 @@ export default function Home() {
   }
 
   useEffect(() => {
-    // A returning member who followed an invite link claims it here.
-    const inv = getPendingInvite();
-    if (inv) {
-      claimInvite(inv.token)
-        .catch(() => {})
-        .finally(() => {
-          clearPendingInvite();
-          load();
-        });
-    }
     load();
   }, []);
 
@@ -74,8 +65,8 @@ export default function Home() {
     setDeleting(true);
     try {
       await deleteRound(confirmId);
-      setDrafts((prev) => prev.filter((d) => d.round.id !== confirmId));
       setConfirmId(null);
+      load();
     } finally {
       setDeleting(false);
     }
@@ -85,11 +76,8 @@ export default function Home() {
 
   return (
     <div className="screen fade">
-      <div className="safe-top" style={{ flex: "none", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 24px 4px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ font: "700 18px var(--sans)", letterSpacing: "0.02em", color: "var(--green-900)" }}>BACK</span>
-          <span style={{ width: 27, height: 27, borderRadius: "50%", background: "var(--green-900)", color: "var(--gold)", font: "700 15px var(--sans)", display: "grid", placeItems: "center" }}>9</span>
-        </div>
+      <div className="safe-top" style={{ flex: "none", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 24px 4px" }}>
+        <Logo width={140} />
         <button onClick={() => navigate("/account")} aria-label="Account" style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer" }}>
           <Avatar initials={profile?.initials ?? "9"} me size={38} />
         </button>
@@ -103,10 +91,7 @@ export default function Home() {
           </div>
 
           <button className="btn" style={{ height: 64, fontSize: 18 }} onClick={() => navigate("/rounds/new")}>
-            <span style={{ position: "relative", width: 16, height: 20, display: "inline-block" }}>
-              <span style={{ position: "absolute", left: 2, top: 0, bottom: 0, width: 2, background: "var(--gold)" }} />
-              <span style={{ position: "absolute", left: 4, top: 1, width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "11px solid var(--gold)" }} />
-            </span>
+            <FontAwesomeIcon icon={faFlag} style={{ color: "var(--gold)", fontSize: 17 }} />
             Log a round
           </button>
 
@@ -171,7 +156,7 @@ export default function Home() {
                         aria-label="Delete round"
                         style={{ width: 46, height: 46, flex: "none", borderRadius: 12, border: "1.5px solid #d8b7a8", background: "transparent", color: "#a8654a", cursor: "pointer", display: "grid", placeItems: "center" }}
                       >
-                        <TrashIcon />
+                        <FontAwesomeIcon icon={faTrashCan} />
                       </button>
                     </div>
                   </div>
@@ -198,7 +183,12 @@ export default function Home() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {rounds.map((r) => (
-                  <RoundRow key={r.round.id} row={r} onClick={() => navigate(`/rounds/${r.round.id}`)} />
+                  <RoundRow
+                    key={r.round.id}
+                    row={r}
+                    onClick={() => navigate(`/rounds/${r.round.id}`)}
+                    onDelete={() => setConfirmId(r.round.id)}
+                  />
                 ))}
               </div>
             )}
@@ -219,23 +209,32 @@ export default function Home() {
   );
 }
 
-function RoundRow({ row, onClick }: { row: RoundSummaryRow; onClick: () => void }) {
+function RoundRow({ row, onClick, onDelete }: { row: RoundSummaryRow; onClick: () => void; onDelete: () => void }) {
   const under = row.selfDiff !== null && row.selfDiff < 0;
   return (
-    <button onClick={onClick} className="card" style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", cursor: "pointer", textAlign: "left", width: "100%" }}>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-        <span style={{ font: "600 15px var(--sans)", color: "var(--ink)" }}>{formatRoundDate(row.round.played_on)}</span>
-        <span style={{ font: "400 13px var(--sans)", color: "var(--faint)" }}>
-          {modeLabel(row.round.mode)} · {row.playerCount} {row.playerCount === 1 ? "player" : "players"}
-        </span>
-      </div>
-      {row.selfTotal !== null && (
-        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-          <span className="tnum" style={{ font: "600 20px var(--sans)", color: "var(--ink)" }}>{row.selfTotal}</span>
-          <span style={{ font: "600 13px var(--sans)", color: under ? "var(--brass)" : "var(--faint)" }}>{toParLabel(row.selfDiff!)}</span>
+    <div className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 12px 14px 16px" }}>
+      <button onClick={onClick} style={{ flex: 1, display: "flex", alignItems: "center", gap: 12, border: "none", background: "transparent", cursor: "pointer", textAlign: "left", padding: 0, minWidth: 0 }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+          <span style={{ font: "600 15px var(--sans)", color: "var(--ink)" }}>{formatRoundDate(row.round.played_on)}</span>
+          <span style={{ font: "400 13px var(--sans)", color: "var(--faint)" }}>
+            {modeLabel(row.round.mode)} · {row.playerCount} {row.playerCount === 1 ? "player" : "players"}
+          </span>
         </div>
-      )}
-    </button>
+        {row.selfTotal !== null && (
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span className="tnum" style={{ font: "600 20px var(--sans)", color: "var(--ink)" }}>{row.selfTotal}</span>
+            <span style={{ font: "600 13px var(--sans)", color: under ? "var(--brass)" : "var(--faint)" }}>{toParLabel(row.selfDiff!)}</span>
+          </div>
+        )}
+      </button>
+      <button
+        onClick={onDelete}
+        aria-label="Delete round"
+        style={{ width: 38, height: 38, flex: "none", borderRadius: 10, border: "none", background: "transparent", color: "#b58a78", cursor: "pointer", display: "grid", placeItems: "center" }}
+      >
+        <FontAwesomeIcon icon={faTrashCan} />
+      </button>
+    </div>
   );
 }
 
@@ -248,12 +247,3 @@ function EmptyRounds() {
   );
 }
 
-function TrashIcon() {
-  return (
-    <span style={{ position: "relative", width: 15, height: 16, display: "block" }}>
-      <span style={{ position: "absolute", top: 3, left: 0, right: 0, height: 1.5, background: "currentColor" }} />
-      <span style={{ position: "absolute", top: 0, left: 5, width: 5, height: 2, border: "1.5px solid currentColor", borderBottom: "none", borderRadius: "2px 2px 0 0" }} />
-      <span style={{ position: "absolute", top: 5, left: 1.5, width: 12, height: 10, border: "1.5px solid currentColor", borderTop: "none", borderRadius: "0 0 3px 3px" }} />
-    </span>
-  );
-}

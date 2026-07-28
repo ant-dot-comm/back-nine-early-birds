@@ -10,6 +10,8 @@ import { Avatar, TopBar, FullSpinner } from "../components/ui";
 import { formatLongDate } from "../lib/date";
 import { useAuth } from "../context/AuthContext";
 import ShareInviteModal from "../components/ShareInviteModal";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 
 interface Standing {
   player: Player;
@@ -135,9 +137,9 @@ export default function Summary() {
                       onClick={() => setShareFor(s.player)}
                       aria-label={`Share ${s.player.name}'s score`}
                       title="Email this score + invite to sign up"
-                      style={{ width: 34, height: 34, flex: "none", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--sand)", cursor: "pointer", display: "grid", placeItems: "center", color: "var(--green-900)" }}
+                      style={{ width: 36, height: 36, flex: "none", borderRadius: 10, border: "none", background: "var(--green-900)", cursor: "pointer", display: "grid", placeItems: "center", color: "var(--sand)" }}
                     >
-                      <ShareIcon />
+                      <FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: 14 }} />
                     </button>
                   )}
                 </div>
@@ -221,16 +223,6 @@ export default function Summary() {
         />
       )}
     </div>
-  );
-}
-
-function ShareIcon() {
-  return (
-    <span style={{ position: "relative", width: 15, height: 15, display: "block" }}>
-      <span style={{ position: "absolute", left: 6.5, top: 0, width: 2, height: 9, background: "currentColor", borderRadius: 1 }} />
-      <span style={{ position: "absolute", left: 3, top: 2.5, width: 6, height: 6, borderTop: "2px solid currentColor", borderLeft: "2px solid currentColor", transform: "rotate(45deg)" }} />
-      <span style={{ position: "absolute", left: 1, bottom: 0, width: 13, height: 6, border: "2px solid currentColor", borderTop: "none", borderRadius: "0 0 2px 2px" }} />
-    </span>
   );
 }
 

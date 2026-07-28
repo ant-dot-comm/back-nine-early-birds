@@ -1,7 +1,7 @@
-// Mission Trails — pars for all 18 holes (front nine 36 + back nine 36 = 72).
+// Mission Trails — official scorecard pars (front nine 35 + back nine 36 = 71).
 export const PARS: Record<number, number> = {
-  1: 4, 2: 5, 3: 4, 4: 3, 5: 4, 6: 4, 7: 3, 8: 5, 9: 4,
-  10: 4, 11: 3, 12: 4, 13: 5, 14: 4, 15: 3, 16: 4, 17: 4, 18: 5,
+  1: 5, 2: 4, 3: 3, 4: 4, 5: 4, 6: 5, 7: 3, 8: 4, 9: 3,
+  10: 3, 11: 4, 12: 5, 13: 4, 14: 5, 15: 4, 16: 4, 17: 3, 18: 4,
 };
 
 export type RoundMode = "back9" | "full18";
