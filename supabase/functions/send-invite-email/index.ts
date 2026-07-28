@@ -1,5 +1,5 @@
 // Emails a score + signup invite via Resend.
-// Requires secrets: RESEND_API_KEY, INVITE_FROM, SITE_URL.
+// Requires secret: RESEND_API_KEY. Optional: INVITE_FROM, SITE_URL (have defaults).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const cors = {
@@ -89,8 +89,9 @@ Deno.serve(async (req: Request) => {
 
     const RESEND = Deno.env.get("RESEND_API_KEY");
     if (!RESEND) return json({ error: "Email not configured" }, 503);
+    // Sensible defaults so RESEND_API_KEY is the only required secret.
     const FROM = Deno.env.get("INVITE_FROM") ?? "Back 9 Early Birds <onboarding@resend.dev>";
-    const SITE = Deno.env.get("SITE_URL") ?? "";
+    const SITE = Deno.env.get("SITE_URL") ?? "https://back-nine-early-birds.vercel.app";
 
     const scores = (inv.scores as Score[]) ?? [];
     const total = scores.reduce((s, x) => s + (x.strokes ?? 0), 0);
