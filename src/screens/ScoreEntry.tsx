@@ -76,6 +76,13 @@ export default function ScoreEntry() {
     return n;
   }, [cells, players, holes]);
 
+  const activeUnsaved = useMemo(() => {
+    if (!player) return 0;
+    let n = 0;
+    for (const h of holes) if (!cells[key(player.id, h)]?.saved) n++;
+    return n;
+  }, [cells, player, holes]);
+
   // Local edit: mark the hole unsaved (persisted only when the user saves it).
   function edit(hole: number, patch: Partial<Cell>) {
     if (!player) return;
@@ -103,6 +110,29 @@ export default function ScoreEntry() {
     } catch (e) {
       setCells((prev) => ({ ...prev, [k]: { ...c, saved: false } }));
       setError(e instanceof Error ? e.message : "Couldn't save that hole — check your connection.");
+    }
+  }
+
+  async function saveAll() {
+    if (!player || !id) return;
+    const targets = holes.filter((h) => !cells[key(player.id, h)]?.saved);
+    if (targets.length === 0) return;
+    setCells((prev) => {
+      const next = { ...prev };
+      for (const h of targets) {
+        const k = key(player.id, h);
+        if (next[k]) next[k] = { ...next[k], saved: true };
+      }
+      return next;
+    });
+    for (const h of targets) {
+      const c = cells[key(player.id, h)];
+      if (!c) continue;
+      try {
+        await updateHole(id, player.id, h, { strokes: c.strokes, gir: c.gir, saved: true });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Couldn't save — check your connection.");
+      }
     }
   }
 
@@ -229,6 +259,15 @@ export default function ScoreEntry() {
               </div>
             );
           })}
+          {activeUnsaved > 0 && (
+            <button
+              className="btn"
+              onClick={saveAll}
+              style={{ marginTop: 4 }}
+            >
+              Save all {activeUnsaved} hole{activeUnsaved === 1 ? "" : "s"} for {player?.name.split(/\s+/)[0]}
+            </button>
+          )}
           {error && <ErrorNote>{error}</ErrorNote>}
         </div>
       </div>

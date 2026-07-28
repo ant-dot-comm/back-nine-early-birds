@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getRoundDetail, deleteRound } from "../lib/db";
+import { getRoundDetail, deleteRound, shareScoreToMember } from "../lib/db";
 import type { Player, HoleScore, RoundMode, RoundDetail } from "../lib/types";
 import ConfirmDialog from "../components/ConfirmDialog";
 import {
@@ -11,7 +11,7 @@ import { formatLongDate } from "../lib/date";
 import { useAuth } from "../context/AuthContext";
 import ShareInviteModal from "../components/ShareInviteModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { faPaperPlane, faCheck } from "@fortawesome/free-solid-svg-icons";
 
 interface Standing {
   player: Player;
@@ -36,7 +36,31 @@ export default function Summary() {
   const [shareFor, setShareFor] = useState<Player | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sharingId, setSharingId] = useState<string | null>(null);
+  const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+  const [shareErr, setShareErr] = useState<string | null>(null);
   const { profile } = useAuth();
+
+  function cardScores(playerId: string) {
+    return scores
+      .filter((s) => s.player_id === playerId)
+      .sort((a, b) => a.hole - b.hole)
+      .map((s) => ({ hole: s.hole, par: s.par, strokes: s.strokes, gir: s.gir }));
+  }
+
+  async function shareToMember(p: Player) {
+    if (!id) return;
+    setSharingId(p.id);
+    setShareErr(null);
+    try {
+      await shareScoreToMember(id, p, cardScores(p.id), { played_on: playedOn, course, mode }, profile?.display_name ?? "A friend");
+      setSentIds((prev) => new Set(prev).add(p.id));
+    } catch (e) {
+      setShareErr(e instanceof Error ? e.message : "Couldn't send to their account.");
+    } finally {
+      setSharingId(null);
+    }
+  }
 
   async function doDelete() {
     if (!id) return;
@@ -133,18 +157,36 @@ export default function Summary() {
                     <span style={{ font: "600 14px var(--sans)", color: s.diff < 0 ? "var(--brass)" : "var(--faint)" }}>{toParLabel(s.diff)}</span>
                   </div>
                   {!s.player.is_self && (
-                    <button
-                      onClick={() => setShareFor(s.player)}
-                      aria-label={`Share ${s.player.name}'s score`}
-                      title="Email this score + invite to sign up"
-                      style={{ width: 36, height: 36, flex: "none", borderRadius: 10, border: "none", background: "var(--green-900)", cursor: "pointer", display: "grid", placeItems: "center", color: "var(--sand)" }}
-                    >
-                      <FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: 14 }} />
-                    </button>
+                    s.player.member_user_id ? (
+                      <button
+                        onClick={() => shareToMember(s.player)}
+                        disabled={sharingId === s.player.id || sentIds.has(s.player.id)}
+                        aria-label={`Send ${s.player.name}'s score to their account`}
+                        title="Post this score to their Back 9 account"
+                        style={{ width: 36, height: 36, flex: "none", borderRadius: 10, border: "none", background: sentIds.has(s.player.id) ? "var(--brass)" : "var(--green-900)", cursor: "pointer", display: "grid", placeItems: "center", color: "var(--sand)" }}
+                      >
+                        {sharingId === s.player.id ? <span className="spin on-dark" style={{ width: 16, height: 16 }} /> : <FontAwesomeIcon icon={sentIds.has(s.player.id) ? faCheck : faPaperPlane} style={{ fontSize: 14 }} />}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setShareFor(s.player)}
+                        aria-label={`Share ${s.player.name}'s score`}
+                        title="Email this score + invite to sign up"
+                        style={{ width: 36, height: 36, flex: "none", borderRadius: 10, border: "none", background: "var(--green-900)", cursor: "pointer", display: "grid", placeItems: "center", color: "var(--sand)" }}
+                      >
+                        <FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: 14 }} />
+                      </button>
+                    )
                   )}
                 </div>
               );
             })}
+            {shareErr && <span style={{ font: "500 12px var(--sans)", color: "#9a3b26" }}>{shareErr}</span>}
+            {sentIds.size > 0 && !shareErr && (
+              <span style={{ font: "500 12px var(--sans)", color: "var(--green-700)" }}>
+                Score sent to their account — they'll see it on their dashboard.
+              </span>
+            )}
           </div>
 
           {/* hole-by-hole */}

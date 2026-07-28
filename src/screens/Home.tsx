@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
 import type { ScoreShare } from "../lib/types";
-import { Avatar, StatCard, FullSpinner, Logo } from "../components/ui";
+import { Avatar, FullSpinner, Logo } from "../components/ui";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan, faFlag } from "@fortawesome/free-solid-svg-icons";
@@ -154,7 +154,7 @@ export default function Home() {
                       <button
                         onClick={() => setConfirmId(d.round.id)}
                         aria-label="Delete round"
-                        style={{ width: 46, height: 46, flex: "none", borderRadius: 12, border: "1.5px solid #d8b7a8", background: "transparent", color: "#a8654a", cursor: "pointer", display: "grid", placeItems: "center" }}
+                        style={{ width: 38, height: 46, flex: "none", borderRadius: 10, border: "none", background: "transparent", color: "#b58a78", cursor: "pointer", display: "grid", placeItems: "center" }}
                       >
                         <FontAwesomeIcon icon={faTrashCan} />
                       </button>
@@ -165,10 +165,7 @@ export default function Home() {
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 12 }}>
-            <StatCard label="Birdies this season" value={stats ? stats.birdies : "—"} accent />
-            <StatCard label="Rounds played" value={stats ? stats.roundsPlayed : "—"} />
-          </div>
+          <StatTiles stats={stats} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
@@ -234,6 +231,34 @@ function RoundRow({ row, onClick, onDelete }: { row: RoundSummaryRow; onClick: (
       >
         <FontAwesomeIcon icon={faTrashCan} />
       </button>
+    </div>
+  );
+}
+
+function StatTiles({ stats }: { stats: SeasonStats | null }) {
+  const year = new Date().getFullYear();
+  const tiles: { label: string; value: string; accent?: boolean }[] = [
+    { label: "Rounds", value: stats ? String(stats.roundsPlayed) : "—" },
+    { label: "Birdies", value: stats ? String(stats.birdies) : "—", accent: true },
+    { label: "Eagles", value: stats ? String(stats.eagles) : "—", accent: true },
+    { label: "Best to par", value: stats?.bestToPar == null ? "—" : toParLabel(stats.bestToPar) },
+    { label: "Scoring avg", value: stats?.scoringAvg == null ? "—" : stats.scoringAvg.toFixed(1) },
+    { label: "GIR", value: stats?.girPct == null ? "—" : `${Math.round(stats.girPct)}%` },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+        <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>{year} season</h2>
+        <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>your card</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+        {tiles.map((t) => (
+          <div key={t.label} className="card" style={{ padding: "14px 14px 13px", display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ font: "500 11px var(--sans)", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--faint)" }}>{t.label}</span>
+            <span className="tnum" style={{ font: "600 26px var(--sans)", lineHeight: 1, color: t.accent ? "var(--brass)" : "var(--green-900)" }}>{t.value}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

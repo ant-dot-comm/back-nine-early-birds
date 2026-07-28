@@ -347,6 +347,33 @@ export async function pushMemberShares(roundId: string, fromDisplay: string): Pr
   if (error) throw error;
 }
 
+/** Post one member-player's card straight to their account as a pending share. */
+export async function shareScoreToMember(
+  roundId: string,
+  player: Player,
+  scores: { hole: number; par: number; strokes: number; gir: boolean }[],
+  round: { played_on: string; course: string; mode: RoundMode },
+  fromDisplay: string
+): Promise<void> {
+  if (!player.member_user_id) throw new Error("That player isn't a member.");
+  // Idempotent per round + recipient.
+  await supabase
+    .from("score_shares")
+    .delete()
+    .eq("round_id", roundId)
+    .eq("to_user", player.member_user_id);
+  const { error } = await supabase.from("score_shares").insert({
+    to_user: player.member_user_id,
+    from_display: fromDisplay,
+    round_id: roundId,
+    played_on: round.played_on,
+    course: round.course,
+    mode: round.mode,
+    scores,
+  });
+  if (error) throw error;
+}
+
 export async function listPendingShares(): Promise<ScoreShare[]> {
   const { data: u } = await supabase.auth.getUser();
   const me = u.user?.id;
