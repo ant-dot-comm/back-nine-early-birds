@@ -91,7 +91,7 @@ Deno.serve(async (req: Request) => {
     if (!RESEND) return json({ error: "Email not configured" }, 503);
     // Sensible defaults so RESEND_API_KEY is the only required secret.
     const FROM = Deno.env.get("INVITE_FROM") ?? "Back 9 Early Birds <onboarding@resend.dev>";
-    const SITE = Deno.env.get("SITE_URL") ?? "https://back-nine-early-birds.vercel.app";
+    const SITE = Deno.env.get("SITE_URL") ?? "https://back9earlybirds.com";
 
     const scores = (inv.scores as Score[]) ?? [];
     const total = scores.reduce((s, x) => s + (x.strokes ?? 0), 0);
