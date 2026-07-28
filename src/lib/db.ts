@@ -8,6 +8,7 @@ import type {
   HoleScore,
   RoundMode,
   Member,
+  LeaderboardRow,
   ScoreShare,
 } from "./types";
 import { formatRoundDate } from "./date";
@@ -97,10 +98,17 @@ export async function addPlayer(name: string): Promise<Player> {
 export async function listMembers(): Promise<Member[]> {
   const { data, error } = await supabase
     .from("members")
-    .select("id, display_name, initials")
+    .select("id, display_name, initials, first_name, last_name")
     .order("display_name", { ascending: true });
   if (error) throw error;
   return (data as Member[]) ?? [];
+}
+
+/** Season leaderboard across all members (aggregate stats only). */
+export async function getMemberLeaderboard(): Promise<LeaderboardRow[]> {
+  const { data, error } = await supabase.rpc("member_leaderboard");
+  if (error) throw error;
+  return (data as LeaderboardRow[]) ?? [];
 }
 
 /** Get-or-create a roster player linked to a member account. */

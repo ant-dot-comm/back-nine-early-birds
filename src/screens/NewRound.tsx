@@ -9,7 +9,7 @@ import type { Player, Member, RoundMode } from "../lib/types";
 import { Avatar, TopBar, FullSpinner, ErrorNote } from "../components/ui";
 import AddPlayerModal from "../components/AddPlayerModal";
 import { formatRoundDate, todayYMD } from "../lib/date";
-import { modeLabel, toParLabel } from "../lib/course";
+import { modeLabel, toParLabel, personSub } from "../lib/course";
 
 export default function NewRound() {
   const navigate = useNavigate();
@@ -150,7 +150,15 @@ export default function NewRound() {
                       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                         <span style={{ font: "600 16px var(--sans)", color: "var(--ink)" }}>{p.name}</span>
                         <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>
-                          {p.is_self ? "You" : p.member_user_id ? "Member" : "Guest"}
+                          {(() => {
+                            if (p.is_self) return "You";
+                            if (p.member_user_id) {
+                              const m = members.find((x) => x.id === p.member_user_id);
+                              const sub = m ? personSub(m.first_name, m.last_name) : "";
+                              return sub ? `Member · ${sub}` : "Member";
+                            }
+                            return "Guest";
+                          })()}
                         </span>
                       </div>
                       {!p.is_self && (

@@ -22,6 +22,21 @@ export interface Member {
   id: string;
   display_name: string;
   initials: string;
+  first_name: string | null;
+  last_name: string | null;
+}
+
+/** One member's aggregate season stats (from member_leaderboard()). */
+export interface LeaderboardRow {
+  user_id: string;
+  display_name: string;
+  first_name: string | null;
+  last_name: string | null;
+  initials: string;
+  rounds: number;
+  avg_score: number | null;
+  birdies: number;
+  best_to_par: number | null;
 }
 
 export interface ScoreShare {

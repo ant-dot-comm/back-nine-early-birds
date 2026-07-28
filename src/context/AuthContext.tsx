@@ -12,6 +12,8 @@ import type { Profile } from "../lib/types";
 
 interface AuthState {
   loading: boolean;
+  /** True while a signed-in user's profile is still being fetched. */
+  profileLoading: boolean;
   session: Session | null;
   profile: Profile | null;
   /** True while the user arrived via a password-reset link and must set a new password. */
@@ -25,6 +27,7 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   // Detect a password-reset link synchronously from the URL hash. supabase-js
@@ -37,12 +40,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loadProfile(uid: string | undefined) {
     if (!uid) {
       setProfile(null);
+      setProfileLoading(false);
       return;
     }
+    setProfileLoading(true);
     try {
       setProfile(await getProfile(uid));
     } catch {
       setProfile(null);
+    } finally {
+      setProfileLoading(false);
     }
   }
 
@@ -71,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthState = {
     loading,
+    profileLoading,
     session,
     profile,
     recovery,

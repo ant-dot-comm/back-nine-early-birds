@@ -13,7 +13,7 @@ import Account from "./screens/Account";
 import JoinInvite from "./screens/JoinInvite";
 
 export default function App() {
-  const { loading, session, profile, recovery } = useAuth();
+  const { loading, profileLoading, session, profile, recovery } = useAuth();
   const location = useLocation();
 
   // Invite landing: reachable in any auth state (handles its own sign-up flow).
@@ -48,8 +48,15 @@ export default function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
+  } else if (!profile && profileLoading) {
+    // Signed in, profile still loading: hold on a spinner (avoids an onboarding flash).
+    content = (
+      <div className="screen">
+        <FullSpinner label="Loading…" />
+      </div>
+    );
   } else if (!profile) {
-    // Signed in but no display name yet: force onboarding.
+    // Signed in but genuinely no display name yet: force onboarding.
     content = (
       <Routes>
         <Route path="/welcome" element={<SetName />} />

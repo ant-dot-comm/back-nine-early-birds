@@ -68,6 +68,15 @@ export function initialsOf(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+/** Human sublabel "Antoni C." from first + last name; "" if unknown. */
+export function personSub(first?: string | null, last?: string | null): string {
+  const f = (first ?? "").trim();
+  const l = (last ?? "").trim();
+  if (!f && !l) return "";
+  const li = l ? ` ${l[0].toUpperCase()}.` : "";
+  return `${f}${li}`.trim();
+}
+
 export function initialsFromNames(first: string, last: string): string {
   const f = first.trim()[0] ?? "";
   const l = last.trim()[0] ?? "";

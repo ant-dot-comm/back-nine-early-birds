@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare } from "../lib/db";
+import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare, getMemberLeaderboard } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
-import type { ScoreShare } from "../lib/types";
+import type { ScoreShare, LeaderboardRow } from "../lib/types";
 import { Avatar, FullSpinner, Logo } from "../components/ui";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan, faFlag } from "@fortawesome/free-solid-svg-icons";
-import { toParLabel, modeLabel, parTotalFor } from "../lib/course";
+import { toParLabel, modeLabel, parTotalFor, personSub } from "../lib/course";
 import { formatRoundDate } from "../lib/date";
 
 function greeting(): string {
@@ -25,6 +25,8 @@ export default function Home() {
   const [rounds, setRounds] = useState<RoundSummaryRow[] | null>(null);
   const [drafts, setDrafts] = useState<RoundSummaryRow[]>([]);
   const [shares, setShares] = useState<ScoreShare[]>([]);
+  const [board, setBoard] = useState<LeaderboardRow[]>([]);
+  const [statView, setStatView] = useState<"you" | "everyone">("you");
   const [busyShare, setBusyShare] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -34,6 +36,7 @@ export default function Home() {
     listRecentRounds(5).then(setRounds).catch(() => setRounds([]));
     listDraftRounds().then(setDrafts).catch(() => setDrafts([]));
     listPendingShares().then(setShares).catch(() => setShares([]));
+    getMemberLeaderboard().then(setBoard).catch(() => setBoard([]));
   }
 
   async function accept(s: ScoreShare) {
@@ -72,7 +75,7 @@ export default function Home() {
     }
   }
 
-  const firstName = (profile?.display_name ?? "there").split(/\s+/)[0];
+  const firstName = profile?.first_name?.trim() || (profile?.display_name ?? "there").split(/\s+/)[0];
 
   return (
     <div className="screen fade">
@@ -87,7 +90,11 @@ export default function Home() {
         <div className="pad" style={{ display: "flex", flexDirection: "column", gap: 22 }}>
           <div>
             <h1 className="h-serif" style={{ font: "600 30px/1.1 var(--serif)" }}>{greeting()}, {firstName}.</h1>
-            <p style={{ margin: "6px 0 0", font: "400 15px var(--sans)", color: "var(--muted-2)" }}>Early birds tee off Saturday at 6:40am.</p>
+            {profile?.display_name && (
+              <p style={{ margin: "6px 0 0", font: "400 14px var(--sans)", color: "var(--muted-2)" }}>
+                aka <span style={{ color: "var(--brass)", fontWeight: 600 }}>{profile.display_name}</span>
+              </p>
+            )}
           </div>
 
           <button className="btn" style={{ height: 64, fontSize: 18 }} onClick={() => navigate("/rounds/new")}>
@@ -165,7 +172,20 @@ export default function Home() {
             </div>
           )}
 
-          <StatTiles stats={stats} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>{new Date().getFullYear()} season</h2>
+              <select
+                value={statView}
+                onChange={(e) => setStatView(e.target.value as "you" | "everyone")}
+                style={{ font: "600 13px var(--sans)", color: "var(--green-900)", background: "var(--surface)", border: "1px solid var(--line-2)", borderRadius: 10, padding: "6px 10px", cursor: "pointer" }}
+              >
+                <option value="you">Your card</option>
+                <option value="everyone">Everyone</option>
+              </select>
+            </div>
+            {statView === "you" ? <StatTiles stats={stats} /> : <Leaderboard board={board} meId={profile?.id} />}
+          </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
@@ -236,7 +256,6 @@ function RoundRow({ row, onClick, onDelete }: { row: RoundSummaryRow; onClick: (
 }
 
 function StatTiles({ stats }: { stats: SeasonStats | null }) {
-  const year = new Date().getFullYear();
   const tiles: { label: string; value: string; accent?: boolean }[] = [
     { label: "Rounds", value: stats ? String(stats.roundsPlayed) : "—" },
     { label: "Birdies", value: stats ? String(stats.birdies) : "—", accent: true },
@@ -246,19 +265,67 @@ function StatTiles({ stats }: { stats: SeasonStats | null }) {
     { label: "GIR", value: stats?.girPct == null ? "—" : `${Math.round(stats.girPct)}%` },
   ];
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-        <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>{year} season</h2>
-        <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>your card</span>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+      {tiles.map((t) => (
+        <div key={t.label} className="card" style={{ padding: "14px 14px 13px", display: "flex", flexDirection: "column", gap: 6 }}>
+          <span style={{ font: "500 11px var(--sans)", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--faint)" }}>{t.label}</span>
+          <span className="tnum" style={{ font: "600 26px var(--sans)", lineHeight: 1, color: t.accent ? "var(--brass)" : "var(--green-900)" }}>{t.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Condensed member comparison — the signed-in member pinned to the top, active. */
+function Leaderboard({ board, meId }: { board: LeaderboardRow[]; meId?: string }) {
+  const rows = [...board].sort((a, b) => {
+    if (a.user_id === meId) return -1;
+    if (b.user_id === meId) return 1;
+    return 0; // already ordered by avg from the query
+  });
+  if (rows.length === 0) {
+    return (
+      <div className="card" style={{ padding: "22px 18px", textAlign: "center" }}>
+        <span style={{ font: "400 14px var(--sans)", color: "var(--faint)" }}>No members yet.</span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-        {tiles.map((t) => (
-          <div key={t.label} className="card" style={{ padding: "14px 14px 13px", display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ font: "500 11px var(--sans)", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--faint)" }}>{t.label}</span>
-            <span className="tnum" style={{ font: "600 26px var(--sans)", lineHeight: 1, color: t.accent ? "var(--brass)" : "var(--green-900)" }}>{t.value}</span>
+    );
+  }
+  const col: React.CSSProperties = { width: 44, textAlign: "right", font: "600 15px var(--sans)", color: "var(--ink)" };
+  const head: React.CSSProperties = { width: 44, textAlign: "right", font: "500 10px var(--sans)", letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--faint)" };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 14px" }}>
+        <span style={{ flex: 1 }} />
+        <span style={head}>Avg</span>
+        <span style={head}>Rds</span>
+        <span style={head}>Birds</span>
+      </div>
+      {rows.map((r) => {
+        const me = r.user_id === meId;
+        const sub = personSub(r.first_name, r.last_name);
+        return (
+          <div
+            key={r.user_id}
+            className="card"
+            style={{
+              display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+              background: me ? "var(--green-900)" : "var(--surface)",
+              border: me ? "1.5px solid var(--green-900)" : "1px solid var(--line)",
+            }}
+          >
+            <Avatar initials={r.initials} me={me} size={34} />
+            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+              <span style={{ font: "600 15px var(--sans)", color: me ? "var(--sand)" : "var(--ink)" }}>
+                {r.display_name}{me ? " · You" : ""}
+              </span>
+              {sub && <span style={{ font: "400 12px var(--sans)", color: me ? "#9fb39a" : "var(--faint)" }}>{sub}</span>}
+            </div>
+            <span className="tnum" style={{ ...col, color: me ? "var(--gold)" : "var(--green-900)", fontWeight: 700 }}>{r.avg_score == null ? "—" : r.avg_score.toFixed(1)}</span>
+            <span className="tnum" style={{ ...col, color: me ? "var(--sand)" : "var(--ink)" }}>{r.rounds}</span>
+            <span className="tnum" style={{ ...col, color: me ? "var(--gold)" : "var(--brass)" }}>{r.birdies}</span>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

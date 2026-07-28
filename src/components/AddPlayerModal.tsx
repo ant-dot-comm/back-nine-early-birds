@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Member, Player } from "../lib/types";
 import { Avatar } from "./ui";
+import { personSub } from "../lib/course";
 
 export default function AddPlayerModal({
   members,
@@ -69,7 +70,7 @@ export default function AddPlayerModal({
           {fMembers.length > 0 && (
             <Section label="Members">
               {fMembers.map((m) => (
-                <Row key={m.id} initials={m.initials} name={m.display_name} sub="Signed up · gets their score" onClick={() => onAddMember(m)} />
+                <Row key={m.id} initials={m.initials} name={m.display_name} sub={personSub(m.first_name, m.last_name) || "Signed up · gets their score"} onClick={() => onAddMember(m)} />
               ))}
             </Section>
           )}
