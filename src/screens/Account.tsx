@@ -17,7 +17,11 @@ export default function Account() {
     setBusy(true);
     setError(null);
     try {
-      await saveProfile(session.user.id, name.trim());
+      await saveProfile(session.user.id, {
+        firstName: profile?.first_name ?? "",
+        lastName: profile?.last_name ?? "",
+        displayName: name.trim(),
+      });
       await refreshProfile();
       setEditing(false);
     } catch (e) {

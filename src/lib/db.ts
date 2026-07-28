@@ -1,6 +1,14 @@
 import { supabase } from "./supabase";
-import { HOLES, PARS, initialsOf } from "./course";
-import type { Player, Profile, Round, RoundDetail, HoleScore } from "./types";
+import { holesForMode, PARS, initialsFromNames, initialsOf } from "./course";
+import type {
+  Player,
+  Profile,
+  Round,
+  RoundDetail,
+  HoleScore,
+  RoundMode,
+} from "./types";
+import { formatRoundDate } from "./date";
 
 // ---- profile ----------------------------------------------------------------
 
@@ -14,38 +22,46 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   return data;
 }
 
+export interface ProfileInput {
+  firstName: string;
+  lastName: string;
+  displayName: string;
+}
+
 /**
- * Save the display name: upsert the profile AND ensure a "self" player exists
- * (so the user shows up in rounds).
+ * Save the profile (first/last/display) AND keep the "self" player in sync so
+ * the user shows up on leaderboards under their display name.
  */
 export async function saveProfile(
   userId: string,
-  displayName: string
+  input: ProfileInput
 ): Promise<Profile> {
-  const initials = initialsOf(displayName);
+  let initials = initialsFromNames(input.firstName, input.lastName);
+  if (initials === "?") initials = initialsOf(input.displayName);
   const { data, error } = await supabase
     .from("profiles")
-    .upsert({ id: userId, display_name: displayName, initials })
+    .upsert({
+      id: userId,
+      first_name: input.firstName.trim(),
+      last_name: input.lastName.trim(),
+      display_name: input.displayName.trim(),
+      initials,
+    })
     .select()
     .single();
   if (error) throw error;
 
-  // Ensure the self-player exists / stays in sync with the display name.
   const { data: selfPlayer } = await supabase
     .from("players")
     .select("id")
     .eq("is_self", true)
     .maybeSingle();
 
+  const playerFields = { name: input.displayName.trim(), initials };
   if (selfPlayer) {
-    await supabase
-      .from("players")
-      .update({ name: displayName, initials })
-      .eq("id", selfPlayer.id);
+    await supabase.from("players").update(playerFields).eq("id", selfPlayer.id);
   } else {
-    await supabase
-      .from("players")
-      .insert({ name: displayName, initials, is_self: true });
+    await supabase.from("players").insert({ ...playerFields, is_self: true });
   }
 
   return data;
@@ -64,7 +80,7 @@ export async function listPlayers(): Promise<Player[]> {
 }
 
 export async function addPlayer(name: string): Promise<Player> {
-  const initials = initialsOf(name);
+  const initials = name.trim().split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
   const { data, error } = await supabase
     .from("players")
     .insert({ name: name.trim(), initials, is_self: false })
@@ -76,14 +92,16 @@ export async function addPlayer(name: string): Promise<Player> {
 
 // ---- rounds -----------------------------------------------------------------
 
-/** Create a draft round with the given players and blank par-scored holes. */
+/** Create a draft round with the given players, mode, and blank par-scored holes. */
 export async function createRound(
   playedOn: string,
-  playerIds: string[]
+  playerIds: string[],
+  mode: RoundMode,
+  compareRoundId: string | null
 ): Promise<string> {
   const { data: round, error } = await supabase
     .from("rounds")
-    .insert({ played_on: playedOn })
+    .insert({ played_on: playedOn, mode, compare_round_id: compareRoundId })
     .select()
     .single();
   if (error) throw error;
@@ -94,9 +112,9 @@ export async function createRound(
   const { error: rpErr } = await supabase.from("round_players").insert(rp);
   if (rpErr) throw rpErr;
 
-  // Seed every player's card at par so the steppers start sensibly.
+  const holes = holesForMode(mode);
   const seed = playerIds.flatMap((player_id) =>
-    HOLES.map((hole) => ({
+    holes.map((hole) => ({
       round_id: roundId,
       player_id,
       hole,
@@ -109,6 +127,12 @@ export async function createRound(
   if (hsErr) throw hsErr;
 
   return roundId;
+}
+
+export async function deleteRound(roundId: string): Promise<void> {
+  // round_players + hole_scores cascade via FK ON DELETE CASCADE.
+  const { error } = await supabase.from("rounds").delete().eq("id", roundId);
+  if (error) throw error;
 }
 
 export async function getRoundDetail(roundId: string): Promise<RoundDetail> {
@@ -136,7 +160,39 @@ export async function getRoundDetail(roundId: string): Promise<RoundDetail> {
     .filter(Boolean)
     .sort((a, b) => Number(b.is_self) - Number(a.is_self));
 
-  return { round: round as Round, players, scores: (scores as HoleScore[]) ?? [] };
+  // Comparison round (self player's strokes per hole).
+  let compare: RoundDetail["compare"] = null;
+  const typed = round as Round;
+  if (typed.compare_round_id) {
+    const self = players.find((p) => p.is_self);
+    if (self) {
+      const { data: cmpRound } = await supabase
+        .from("rounds")
+        .select("played_on")
+        .eq("id", typed.compare_round_id)
+        .maybeSingle();
+      const { data: cmpScores } = await supabase
+        .from("hole_scores")
+        .select("hole, strokes")
+        .eq("round_id", typed.compare_round_id)
+        .eq("player_id", self.id);
+      if (cmpScores && cmpScores.length) {
+        const strokesByHole: Record<number, number> = {};
+        for (const s of cmpScores) strokesByHole[s.hole] = s.strokes;
+        compare = {
+          label: cmpRound ? formatRoundDate(cmpRound.played_on) : "last round",
+          strokesByHole,
+        };
+      }
+    }
+  }
+
+  return {
+    round: typed,
+    players,
+    scores: (scores as HoleScore[]) ?? [],
+    compare,
+  };
 }
 
 /** Update a single hole (strokes + gir) for a player. */
@@ -172,17 +228,8 @@ export interface RoundSummaryRow {
   selfDiff: number | null;
 }
 
-/** Recent final rounds with the signed-in user's own total for each. */
-export async function listRecentRounds(limit = 20): Promise<RoundSummaryRow[]> {
-  const { data: rounds, error } = await supabase
-    .from("rounds")
-    .select("*")
-    .eq("is_final", true)
-    .order("played_on", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  if (!rounds || rounds.length === 0) return [];
-
+async function summarizeRounds(rounds: Round[]): Promise<RoundSummaryRow[]> {
+  if (rounds.length === 0) return [];
   const ids = rounds.map((r) => r.id);
 
   const { data: rp } = await supabase
@@ -211,12 +258,35 @@ export async function listRecentRounds(limit = 20): Promise<RoundSummaryRow[]> {
     const total = mine.reduce((sum, s) => sum + s.strokes, 0);
     const parSum = mine.reduce((sum, s) => sum + s.par, 0);
     return {
-      round: round as Round,
+      round,
       playerCount: counts.get(round.id) ?? 0,
       selfTotal: mine.length ? total : null,
       selfDiff: mine.length ? total - parSum : null,
     };
   });
+}
+
+/** Recent *finalized* rounds with the signed-in user's own total for each. */
+export async function listRecentRounds(limit = 20): Promise<RoundSummaryRow[]> {
+  const { data, error } = await supabase
+    .from("rounds")
+    .select("*")
+    .eq("is_final", true)
+    .order("played_on", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return summarizeRounds((data as Round[]) ?? []);
+}
+
+/** In-progress (not yet saved) rounds. */
+export async function listDraftRounds(): Promise<RoundSummaryRow[]> {
+  const { data, error } = await supabase
+    .from("rounds")
+    .select("*")
+    .eq("is_final", false)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return summarizeRounds((data as Round[]) ?? []);
 }
 
 export interface SeasonStats {
@@ -231,23 +301,21 @@ export interface SeasonStats {
 /** Aggregate stats for the signed-in user (their own card) this calendar year. */
 export async function getSeasonStats(): Promise<SeasonStats> {
   const yearStart = `${new Date().getFullYear()}-01-01`;
+  const empty: SeasonStats = {
+    roundsPlayed: 0,
+    birdies: 0,
+    eagles: 0,
+    bestToPar: null,
+    scoringAvg: null,
+    girPct: null,
+  };
 
   const { data: selfPlayer } = await supabase
     .from("players")
     .select("id")
     .eq("is_self", true)
     .maybeSingle();
-
-  if (!selfPlayer) {
-    return {
-      roundsPlayed: 0,
-      birdies: 0,
-      eagles: 0,
-      bestToPar: null,
-      scoringAvg: null,
-      girPct: null,
-    };
-  }
+  if (!selfPlayer) return empty;
 
   const { data: rounds } = await supabase
     .from("rounds")
@@ -256,16 +324,7 @@ export async function getSeasonStats(): Promise<SeasonStats> {
     .gte("played_on", yearStart);
 
   const roundIds = (rounds ?? []).map((r) => r.id);
-  if (roundIds.length === 0) {
-    return {
-      roundsPlayed: 0,
-      birdies: 0,
-      eagles: 0,
-      bestToPar: null,
-      scoringAvg: null,
-      girPct: null,
-    };
-  }
+  if (roundIds.length === 0) return empty;
 
   const { data: scores } = await supabase
     .from("hole_scores")
@@ -297,9 +356,7 @@ export async function getSeasonStats(): Promise<SeasonStats> {
     birdies,
     eagles,
     bestToPar: diffs.length ? Math.min(...diffs) : null,
-    scoringAvg: totals.length
-      ? totals.reduce((a, b) => a + b, 0) / totals.length
-      : null,
+    scoringAvg: totals.length ? totals.reduce((a, b) => a + b, 0) / totals.length : null,
     girPct: rows.length ? (girHit / rows.length) * 100 : null,
   };
 }
