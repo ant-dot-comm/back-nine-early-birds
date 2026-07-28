@@ -14,6 +14,9 @@ interface AuthState {
   loading: boolean;
   session: Session | null;
   profile: Profile | null;
+  /** True while the user arrived via a password-reset link and must set a new password. */
+  recovery: boolean;
+  clearRecovery: () => void;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -24,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [recovery, setRecovery] = useState(false);
 
   async function loadProfile(uid: string | undefined) {
     if (!uid) {
@@ -47,7 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, sess) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, sess) => {
+      if (event === "PASSWORD_RECOVERY") setRecovery(true);
       setSession(sess);
       await loadProfile(sess?.user.id);
       setLoading(false);
@@ -63,10 +68,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     session,
     profile,
+    recovery,
+    clearRecovery: () => setRecovery(false),
     refreshProfile: () => loadProfile(session?.user.id),
     signOut: async () => {
       await supabase.auth.signOut();
       setProfile(null);
+      setRecovery(false);
     },
   };
 

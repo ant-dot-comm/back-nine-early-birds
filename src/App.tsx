@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { FullSpinner } from "./components/ui";
 import SignIn from "./screens/SignIn";
-import CheckEmail from "./screens/CheckEmail";
+import ResetPassword from "./screens/ResetPassword";
 import SetName from "./screens/SetName";
 import Home from "./screens/Home";
 import NewRound from "./screens/NewRound";
@@ -12,7 +12,7 @@ import Stats from "./screens/Stats";
 import Account from "./screens/Account";
 
 export default function App() {
-  const { loading, session, profile } = useAuth();
+  const { loading, session, profile, recovery } = useAuth();
 
   let content;
 
@@ -22,12 +22,18 @@ export default function App() {
         <FullSpinner label="Loading…" />
       </div>
     );
+  } else if (recovery) {
+    // Arrived via a password-reset link: force setting a new password first.
+    content = (
+      <Routes>
+        <Route path="*" element={<ResetPassword />} />
+      </Routes>
+    );
   } else if (!session) {
-    // Signed out: only the auth screens are reachable.
+    // Signed out: only the auth screen is reachable.
     content = (
       <Routes>
         <Route path="/login" element={<SignIn />} />
-        <Route path="/check-email" element={<CheckEmail />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
