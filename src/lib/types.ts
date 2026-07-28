@@ -36,7 +36,9 @@ export interface LeaderboardRow {
   rounds: number;
   avg_score: number | null;
   birdies: number;
-  best_to_par: number | null;
+  eagles: number;
+  pars: number;
+  gir_pct: number | null;
 }
 
 export interface ScoreShare {

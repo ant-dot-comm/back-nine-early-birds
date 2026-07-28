@@ -260,7 +260,7 @@ function StatTiles({ stats }: { stats: SeasonStats | null }) {
     { label: "Rounds", value: stats ? String(stats.roundsPlayed) : "—" },
     { label: "Birdies", value: stats ? String(stats.birdies) : "—", accent: true },
     { label: "Eagles", value: stats ? String(stats.eagles) : "—", accent: true },
-    { label: "Best to par", value: stats?.bestToPar == null ? "—" : toParLabel(stats.bestToPar) },
+    { label: "Pars", value: stats ? String(stats.pars) : "—" },
     { label: "Scoring avg", value: stats?.scoringAvg == null ? "—" : stats.scoringAvg.toFixed(1) },
     { label: "GIR", value: stats?.girPct == null ? "—" : `${Math.round(stats.girPct)}%` },
   ];
@@ -276,7 +276,8 @@ function StatTiles({ stats }: { stats: SeasonStats | null }) {
   );
 }
 
-/** Condensed member comparison — the signed-in member pinned to the top, active. */
+/** Member comparison across every stat — the signed-in member pinned top, active.
+ *  Scrolls horizontally since there are more columns than fit on a phone. */
 function Leaderboard({ board, meId }: { board: LeaderboardRow[]; meId?: string }) {
   const rows = [...board].sort((a, b) => {
     if (a.user_id === meId) return -1;
@@ -290,42 +291,59 @@ function Leaderboard({ board, meId }: { board: LeaderboardRow[]; meId?: string }
       </div>
     );
   }
-  const col: React.CSSProperties = { width: 44, textAlign: "right", font: "600 15px var(--sans)", color: "var(--ink)" };
-  const head: React.CSSProperties = { width: 44, textAlign: "right", font: "500 10px var(--sans)", letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--faint)" };
+
+  const cols: { key: string; label: string; get: (r: LeaderboardRow) => string; accent?: boolean }[] = [
+    { key: "avg", label: "Avg", get: (r) => (r.avg_score == null ? "—" : r.avg_score.toFixed(1)), accent: true },
+    { key: "rds", label: "Rds", get: (r) => String(r.rounds) },
+    { key: "bird", label: "Bird", get: (r) => String(r.birdies), accent: true },
+    { key: "eag", label: "Eag", get: (r) => String(r.eagles), accent: true },
+    { key: "par", label: "Pars", get: (r) => String(r.pars) },
+    { key: "gir", label: "GIR", get: (r) => (r.gir_pct == null ? "—" : `${r.gir_pct}%`) },
+  ];
+  const NAME_W = 150;
+  const CELL_W = 50;
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 14px" }}>
-        <span style={{ flex: 1 }} />
-        <span style={head}>Avg</span>
-        <span style={head}>Rds</span>
-        <span style={head}>Birds</span>
-      </div>
-      {rows.map((r) => {
-        const me = r.user_id === meId;
-        const sub = personSub(r.first_name, r.last_name);
-        return (
-          <div
-            key={r.user_id}
-            className="card"
-            style={{
-              display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-              background: me ? "var(--green-900)" : "var(--surface)",
-              border: me ? "1.5px solid var(--green-900)" : "1px solid var(--line)",
-            }}
-          >
-            <Avatar initials={r.initials} me={me} size={34} />
-            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-              <span style={{ font: "600 15px var(--sans)", color: me ? "var(--sand)" : "var(--ink)" }}>
-                {r.display_name}{me ? " · You" : ""}
-              </span>
-              {sub && <span style={{ font: "400 12px var(--sans)", color: me ? "#9fb39a" : "var(--faint)" }}>{sub}</span>}
+    <div style={{ overflowX: "auto", margin: "0 -24px", padding: "2px 24px 4px" }}>
+      <div style={{ minWidth: NAME_W + cols.length * CELL_W, display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* header */}
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 0, padding: "0 4px" }}>
+          <span style={{ width: NAME_W, flex: "none" }} />
+          {cols.map((c) => (
+            <span key={c.key} style={{ width: CELL_W, flex: "none", textAlign: "center", font: "500 10px var(--sans)", letterSpacing: "0.03em", textTransform: "uppercase", color: "var(--faint)" }}>{c.label}</span>
+          ))}
+        </div>
+        {rows.map((r) => {
+          const me = r.user_id === meId;
+          const sub = personSub(r.first_name, r.last_name);
+          return (
+            <div
+              key={r.user_id}
+              className="card"
+              style={{
+                display: "flex", alignItems: "center", padding: "10px 4px",
+                background: me ? "var(--green-900)" : "var(--surface)",
+                border: me ? "1.5px solid var(--green-900)" : "1px solid var(--line)",
+              }}
+            >
+              <div style={{ width: NAME_W, flex: "none", display: "flex", alignItems: "center", gap: 10, paddingLeft: 8, minWidth: 0 }}>
+                <Avatar initials={r.initials} me={me} size={32} />
+                <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
+                  <span style={{ font: "600 14px var(--sans)", color: me ? "var(--sand)" : "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {r.display_name}{me ? " · You" : ""}
+                  </span>
+                  {sub && <span style={{ font: "400 11px var(--sans)", color: me ? "#9fb39a" : "var(--faint)" }}>{sub}</span>}
+                </div>
+              </div>
+              {cols.map((c) => (
+                <span key={c.key} className="tnum" style={{ width: CELL_W, flex: "none", textAlign: "center", font: "600 15px var(--sans)", color: me ? (c.accent ? "var(--gold)" : "var(--sand)") : c.accent ? "var(--brass)" : "var(--ink)" }}>
+                  {c.get(r)}
+                </span>
+              ))}
             </div>
-            <span className="tnum" style={{ ...col, color: me ? "var(--gold)" : "var(--green-900)", fontWeight: 700 }}>{r.avg_score == null ? "—" : r.avg_score.toFixed(1)}</span>
-            <span className="tnum" style={{ ...col, color: me ? "var(--sand)" : "var(--ink)" }}>{r.rounds}</span>
-            <span className="tnum" style={{ ...col, color: me ? "var(--gold)" : "var(--brass)" }}>{r.birdies}</span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -521,7 +521,7 @@ export interface SeasonStats {
   roundsPlayed: number;
   birdies: number;
   eagles: number;
-  bestToPar: number | null;
+  pars: number;
   scoringAvg: number | null;
   girPct: number | null;
 }
@@ -533,7 +533,7 @@ export async function getSeasonStats(): Promise<SeasonStats> {
     roundsPlayed: 0,
     birdies: 0,
     eagles: 0,
-    bestToPar: null,
+    pars: 0,
     scoringAvg: null,
     girPct: null,
   };
@@ -563,12 +563,14 @@ export async function getSeasonStats(): Promise<SeasonStats> {
   const rows = scores ?? [];
   let birdies = 0;
   let eagles = 0;
+  let pars = 0;
   let girHit = 0;
 
   const perRound = new Map<string, { strokes: number; par: number }>();
   for (const s of rows) {
     if (s.strokes === s.par - 1) birdies++;
     if (s.strokes <= s.par - 2) eagles++;
+    if (s.strokes === s.par) pars++;
     if (s.gir) girHit++;
     const acc = perRound.get(s.round_id) ?? { strokes: 0, par: 0 };
     acc.strokes += s.strokes;
@@ -576,14 +578,13 @@ export async function getSeasonStats(): Promise<SeasonStats> {
     perRound.set(s.round_id, acc);
   }
 
-  const diffs = [...perRound.values()].map((r) => r.strokes - r.par);
   const totals = [...perRound.values()].map((r) => r.strokes);
 
   return {
     roundsPlayed: perRound.size,
     birdies,
     eagles,
-    bestToPar: diffs.length ? Math.min(...diffs) : null,
+    pars,
     scoringAvg: totals.length ? totals.reduce((a, b) => a + b, 0) / totals.length : null,
     girPct: rows.length ? (girHit / rows.length) * 100 : null,
   };
