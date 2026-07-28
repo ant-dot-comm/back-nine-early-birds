@@ -104,9 +104,9 @@ export async function listMembers(): Promise<Member[]> {
   return (data as Member[]) ?? [];
 }
 
-/** Season leaderboard across all members (aggregate stats only). */
-export async function getMemberLeaderboard(): Promise<LeaderboardRow[]> {
-  const { data, error } = await supabase.rpc("member_leaderboard");
+/** Season leaderboard across all members for a format (aggregate stats only). */
+export async function getMemberLeaderboard(mode: RoundMode = "back9"): Promise<LeaderboardRow[]> {
+  const { data, error } = await supabase.rpc("member_leaderboard", { p_mode: mode });
   if (error) throw error;
   return (data as LeaderboardRow[]) ?? [];
 }
@@ -526,8 +526,8 @@ export interface SeasonStats {
   girPct: number | null;
 }
 
-/** Aggregate stats for the signed-in user (their own card) this calendar year. */
-export async function getSeasonStats(): Promise<SeasonStats> {
+/** Aggregate stats for the signed-in user (their own card) this year, by format. */
+export async function getSeasonStats(mode: RoundMode = "back9"): Promise<SeasonStats> {
   const yearStart = `${new Date().getFullYear()}-01-01`;
   const empty: SeasonStats = {
     roundsPlayed: 0,
@@ -549,6 +549,7 @@ export async function getSeasonStats(): Promise<SeasonStats> {
     .from("rounds")
     .select("id")
     .eq("is_final", true)
+    .eq("mode", mode)
     .gte("played_on", yearStart);
 
   const roundIds = (rounds ?? []).map((r) => r.id);

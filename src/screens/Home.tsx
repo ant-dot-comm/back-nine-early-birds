@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare, getMemberLeaderboard } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
-import type { ScoreShare, LeaderboardRow } from "../lib/types";
+import type { ScoreShare, LeaderboardRow, RoundMode } from "../lib/types";
 import { Avatar, FullSpinner, Logo } from "../components/ui";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,16 +27,17 @@ export default function Home() {
   const [shares, setShares] = useState<ScoreShare[]>([]);
   const [board, setBoard] = useState<LeaderboardRow[]>([]);
   const [statView, setStatView] = useState<"you" | "everyone">("you");
+  const [statMode, setStatMode] = useState<RoundMode>("back9");
   const [busyShare, setBusyShare] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   function load() {
-    getSeasonStats().then(setStats).catch(() => setStats(null));
+    getSeasonStats(statMode).then(setStats).catch(() => setStats(null));
     listRecentRounds(5).then(setRounds).catch(() => setRounds([]));
     listDraftRounds().then(setDrafts).catch(() => setDrafts([]));
     listPendingShares().then(setShares).catch(() => setShares([]));
-    getMemberLeaderboard().then(setBoard).catch(() => setBoard([]));
+    getMemberLeaderboard(statMode).then(setBoard).catch(() => setBoard([]));
   }
 
   async function accept(s: ScoreShare) {
@@ -59,9 +60,11 @@ export default function Home() {
     }
   }
 
+  // Refetch when the format toggle changes (stats + leaderboard are per-format).
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statMode]);
 
   async function doDelete() {
     if (!confirmId) return;
@@ -183,6 +186,16 @@ export default function Home() {
                 <option value="you">Your card</option>
                 <option value="everyone">Everyone</option>
               </select>
+            </div>
+            <div style={{ display: "flex", gap: 4, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 3, alignSelf: "flex-start" }}>
+              {(["back9", "full18"] as RoundMode[]).map((m) => {
+                const on = statMode === m;
+                return (
+                  <button key={m} onClick={() => setStatMode(m)} style={{ height: 30, padding: "0 14px", borderRadius: 8, border: "none", cursor: "pointer", font: "600 12px var(--sans)", background: on ? "var(--green-900)" : "transparent", color: on ? "var(--sand)" : "var(--muted-2)" }}>
+                    {modeLabel(m)}
+                  </button>
+                );
+              })}
             </div>
             {statView === "you" ? <StatTiles stats={stats} /> : <Leaderboard board={board} meId={profile?.id} />}
           </div>
