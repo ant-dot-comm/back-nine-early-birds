@@ -219,6 +219,64 @@ export async function finalizeRound(roundId: string): Promise<void> {
   if (error) throw error;
 }
 
+// ---- invites (share a score + invite to sign up) ----------------------------
+
+export interface InviteInput {
+  roundId: string;
+  playerId: string;
+  email: string;
+  inviterDisplay: string;
+  playerName: string;
+  mode: RoundMode;
+  playedOn: string;
+  course: string;
+  scores: { hole: number; par: number; strokes: number; gir: boolean }[];
+}
+
+/** Create an invite (snapshotting the player's card) and return its token. */
+export async function createInvite(i: InviteInput): Promise<string> {
+  const [first, ...rest] = i.playerName.trim().split(/\s+/);
+  const { data, error } = await supabase
+    .from("invites")
+    .insert({
+      round_id: i.roundId,
+      player_id: i.playerId,
+      recipient_email: i.email,
+      inviter_display: i.inviterDisplay,
+      player_name: i.playerName,
+      prefill_first: first ?? "",
+      prefill_last: rest.join(" "),
+      mode: i.mode,
+      played_on: i.playedOn,
+      course: i.course,
+      scores: i.scores,
+    })
+    .select("token")
+    .single();
+  if (error) throw error;
+  return data.token as string;
+}
+
+/** Ask the edge function to email the invite. Throws if email isn't configured. */
+export async function sendInviteEmail(token: string): Promise<void> {
+  const { error } = await supabase.functions.invoke("send-invite-email", {
+    body: { token },
+  });
+  if (error) throw error;
+}
+
+/** Claim an invite into the signed-in user's account; returns the new round id. */
+export async function claimInvite(token: string): Promise<string> {
+  const { data, error } = await supabase.rpc("claim_invite", { p_token: token });
+  if (error) throw error;
+  return data as string;
+}
+
+export function inviteLink(token: string, first: string, last: string): string {
+  const q = new URLSearchParams({ invite: token, first, last });
+  return `${window.location.origin}/login?${q.toString()}`;
+}
+
 // ---- home / stats -----------------------------------------------------------
 
 export interface RoundSummaryRow {

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound } from "../lib/db";
+import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, claimInvite } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
 import { Avatar, StatCard, FullSpinner } from "../components/ui";
 import { toParLabel, modeLabel } from "../lib/course";
 import { formatRoundDate } from "../lib/date";
+import { getPendingInvite, clearPendingInvite } from "../lib/invite";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -23,10 +24,24 @@ export default function Home() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
+  function load() {
     getSeasonStats().then(setStats).catch(() => setStats(null));
     listRecentRounds(5).then(setRounds).catch(() => setRounds([]));
     listDraftRounds().then(setDrafts).catch(() => setDrafts([]));
+  }
+
+  useEffect(() => {
+    // A returning member who followed an invite link claims it here.
+    const inv = getPendingInvite();
+    if (inv) {
+      claimInvite(inv.token)
+        .catch(() => {})
+        .finally(() => {
+          clearPendingInvite();
+          load();
+        });
+    }
+    load();
   }, []);
 
   async function doDelete() {

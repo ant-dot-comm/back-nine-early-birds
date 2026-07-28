@@ -7,6 +7,8 @@ import {
 } from "../lib/course";
 import { Avatar, TopBar, FullSpinner } from "../components/ui";
 import { formatLongDate } from "../lib/date";
+import { useAuth } from "../context/AuthContext";
+import ShareInviteModal from "../components/ShareInviteModal";
 
 interface Standing {
   player: Player;
@@ -28,6 +30,8 @@ export default function Summary() {
   const [compare, setCompare] = useState<RoundDetail["compare"]>(null);
   const [loading, setLoading] = useState(true);
   const [gridPlayer, setGridPlayer] = useState<string | null>(null);
+  const [shareFor, setShareFor] = useState<Player | null>(null);
+  const { profile } = useAuth();
 
   useEffect(() => {
     if (!id) return;
@@ -111,6 +115,16 @@ export default function Summary() {
                     <span className="tnum" style={{ font: "600 24px var(--sans)", color: "var(--ink)" }}>{s.total}</span>
                     <span style={{ font: "600 14px var(--sans)", color: s.diff < 0 ? "var(--brass)" : "var(--faint)" }}>{toParLabel(s.diff)}</span>
                   </div>
+                  {!s.player.is_self && (
+                    <button
+                      onClick={() => setShareFor(s.player)}
+                      aria-label={`Share ${s.player.name}'s score`}
+                      title="Email this score + invite to sign up"
+                      style={{ width: 34, height: 34, flex: "none", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--sand)", cursor: "pointer", display: "grid", placeItems: "center", color: "var(--green-900)" }}
+                    >
+                      <ShareIcon />
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -159,7 +173,33 @@ export default function Summary() {
           <button className="btn ghost" onClick={() => navigate("/", { replace: true })}>Done</button>
         </div>
       </div>
+
+      {shareFor && id && (
+        <ShareInviteModal
+          player={shareFor}
+          roundId={id}
+          mode={mode}
+          playedOn={playedOn}
+          course={course}
+          inviterDisplay={profile?.display_name ?? "A friend"}
+          scores={scores
+            .filter((s) => s.player_id === shareFor.id)
+            .sort((a, b) => a.hole - b.hole)
+            .map((s) => ({ hole: s.hole, par: s.par, strokes: s.strokes, gir: s.gir }))}
+          onClose={() => setShareFor(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <span style={{ position: "relative", width: 15, height: 15, display: "block" }}>
+      <span style={{ position: "absolute", left: 6.5, top: 0, width: 2, height: 9, background: "currentColor", borderRadius: 1 }} />
+      <span style={{ position: "absolute", left: 3, top: 2.5, width: 6, height: 6, borderTop: "2px solid currentColor", borderLeft: "2px solid currentColor", transform: "rotate(45deg)" }} />
+      <span style={{ position: "absolute", left: 1, bottom: 0, width: 13, height: 6, border: "2px solid currentColor", borderTop: "none", borderRadius: "0 0 2px 2px" }} />
+    </span>
   );
 }
 

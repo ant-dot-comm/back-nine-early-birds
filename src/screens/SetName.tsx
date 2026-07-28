@@ -1,18 +1,20 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { saveProfile } from "../lib/db";
+import { saveProfile, claimInvite } from "../lib/db";
 import { Avatar, ErrorNote } from "../components/ui";
 import { golfName, initialsFromNames, GOLF_NAME_CHART } from "../lib/course";
+import { getPendingInvite, clearPendingInvite } from "../lib/invite";
 
 export default function SetName() {
   const { session, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
-  // Optional prefill (used by the invite flow — feature coming).
-  const prefillFirst = params.get("first") ?? "";
-  const prefillLast = params.get("last") ?? "";
+  // Prefill from an invite link (via storage) or the URL query.
+  const pending = getPendingInvite();
+  const prefillFirst = pending?.first || params.get("first") || "";
+  const prefillLast = pending?.last || params.get("last") || "";
 
   const [first, setFirst] = useState(prefillFirst);
   const [last, setLast] = useState(prefillLast);
@@ -49,6 +51,16 @@ export default function SetName() {
         lastName: last,
         displayName,
       });
+      // If they arrived from a score invite, claim it into their new account.
+      const inv = getPendingInvite();
+      if (inv) {
+        try {
+          await claimInvite(inv.token);
+        } catch {
+          /* already claimed or invalid — ignore */
+        }
+        clearPendingInvite();
+      }
       await refreshProfile();
       navigate("/", { replace: true });
     } catch (e) {
