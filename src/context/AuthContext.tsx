@@ -27,7 +27,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [recovery, setRecovery] = useState(false);
+  // Detect a password-reset link synchronously from the URL hash. supabase-js
+  // strips the hash and its PASSWORD_RECOVERY event is timing-sensitive, so we
+  // capture it on first render before either can race us.
+  const [recovery, setRecovery] = useState(
+    () => typeof window !== "undefined" && window.location.hash.includes("type=recovery")
+  );
 
   async function loadProfile(uid: string | undefined) {
     if (!uid) {

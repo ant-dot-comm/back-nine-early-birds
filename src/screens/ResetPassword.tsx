@@ -1,16 +1,62 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { Logo, ErrorNote } from "../components/ui";
+import { Logo, ErrorNote, FullSpinner } from "../components/ui";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
-  const { clearRecovery } = useAuth();
+  const { clearRecovery, session } = useAuth();
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [linkDead, setLinkDead] = useState(false);
+
+  // The recovery session is established asynchronously from the URL hash.
+  // If it never arrives, the link was invalid or already used.
+  useEffect(() => {
+    if (session) return;
+    const t = setTimeout(() => setLinkDead(true), 5000);
+    return () => clearTimeout(t);
+  }, [session]);
+
+  if (!session && !linkDead) {
+    return (
+      <div className="screen">
+        <FullSpinner label="Verifying your reset link…" />
+      </div>
+    );
+  }
+
+  if (!session && linkDead) {
+    return (
+      <div className="screen fade">
+        <div
+          className="pad safe-top"
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 16 }}
+        >
+          <Logo width={200} />
+          <h1 className="h-serif" style={{ font: "600 22px var(--serif)", marginTop: 8 }}>
+            This reset link has expired
+          </h1>
+          <p style={{ margin: 0, font: "400 15px/1.6 var(--sans)", color: "var(--muted)" }}>
+            Reset links can only be used once. Head back and request a fresh one.
+          </p>
+          <button
+            className="btn"
+            style={{ maxWidth: 260 }}
+            onClick={() => {
+              clearRecovery();
+              navigate("/login", { replace: true });
+            }}
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   async function save() {
     setError(null);
