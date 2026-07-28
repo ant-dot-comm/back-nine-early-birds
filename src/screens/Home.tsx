@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, claimInvite } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
 import { Avatar, StatCard, FullSpinner } from "../components/ui";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { toParLabel, modeLabel } from "../lib/course";
 import { formatRoundDate } from "../lib/date";
 import { getPendingInvite, clearPendingInvite } from "../lib/invite";
@@ -149,7 +150,9 @@ export default function Home() {
       </div>
 
       {confirmId && (
-        <ConfirmDelete
+        <ConfirmDialog
+          title="Delete this round?"
+          body="This permanently removes the round and every score in it. This can't be undone."
           busy={deleting}
           onCancel={() => setConfirmId(null)}
           onConfirm={doDelete}
@@ -184,30 +187,6 @@ function EmptyRounds() {
     <div className="card" style={{ padding: "26px 20px", textAlign: "center", display: "flex", flexDirection: "column", gap: 6 }}>
       <span style={{ font: "600 16px var(--serif)", color: "var(--green-900)" }}>No rounds yet</span>
       <span style={{ font: "400 14px var(--sans)", color: "var(--faint)" }}>Tap “Log a round” after your next nine.</span>
-    </div>
-  );
-}
-
-function ConfirmDelete({ busy, onCancel, onConfirm }: { busy: boolean; onCancel: () => void; onConfirm: () => void }) {
-  return (
-    <div onClick={onCancel} style={{ position: "fixed", inset: 0, background: "rgba(20,25,12,.45)", display: "grid", placeItems: "center", padding: 24, zIndex: 50 }}>
-      <div onClick={(e) => e.stopPropagation()} className="fade" style={{ width: "100%", maxWidth: 360, background: "var(--sand)", borderRadius: 22, padding: 24, display: "flex", flexDirection: "column", gap: 10 }}>
-        <h2 className="h-serif" style={{ font: "600 20px var(--serif)" }}>Delete this round?</h2>
-        <p style={{ margin: 0, font: "400 15px/1.5 var(--sans)", color: "var(--muted)" }}>
-          This permanently removes the round and every score in it. This can't be undone.
-        </p>
-        <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-          <button className="btn ghost" onClick={onCancel} disabled={busy}>Cancel</button>
-          <button
-            className="btn"
-            style={{ background: "#a8654a" }}
-            onClick={onConfirm}
-            disabled={busy}
-          >
-            {busy ? <span className="spin on-dark" /> : "Delete"}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

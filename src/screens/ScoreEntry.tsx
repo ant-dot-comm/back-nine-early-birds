@@ -14,6 +14,7 @@ const key = (p: string, h: number): Key => `${p}:${h}`;
 interface Cell {
   strokes: number;
   gir: boolean;
+  saved: boolean;
 }
 
 export default function ScoreEntry() {
@@ -41,10 +42,10 @@ export default function ScoreEntry() {
         setMode(detail.round.mode);
         setCompare(detail.compare);
         const map: Record<Key, Cell> = {};
-        for (const s of detail.scores) map[key(s.player_id, s.hole)] = { strokes: s.strokes, gir: s.gir };
+        for (const s of detail.scores) map[key(s.player_id, s.hole)] = { strokes: s.strokes, gir: s.gir, saved: s.saved };
         for (const p of detail.players) {
           for (const h of holesForMode(detail.round.mode)) {
-            if (!map[key(p.id, h)]) map[key(p.id, h)] = { strokes: PARS[h], gir: false };
+            if (!map[key(p.id, h)]) map[key(p.id, h)] = { strokes: PARS[h], gir: false, saved: false };
           }
         }
         setCells(map);
@@ -66,26 +67,45 @@ export default function ScoreEntry() {
     return { total: t, diff: t - parTotal };
   }, [cells, player, holes, parTotal]);
 
-  function patchCell(hole: number, patch: Partial<Cell>) {
-    if (!player || !id) return;
+  // Unsaved count across every player + hole gates finishing the round.
+  const unsavedTotal = useMemo(() => {
+    let n = 0;
+    for (const p of players) for (const h of holes) if (!cells[key(p.id, h)]?.saved) n++;
+    return n;
+  }, [cells, players, holes]);
+
+  // Local edit: mark the hole unsaved (persisted only when the user saves it).
+  function edit(hole: number, patch: Partial<Cell>) {
+    if (!player) return;
     const k = key(player.id, hole);
     setCells((prev) => {
-      const cur = prev[k] ?? { strokes: PARS[hole], gir: false };
-      updateHole(id, player.id, hole, patch).catch((e) =>
-        setError(e instanceof Error ? e.message : "Save failed — check your connection.")
-      );
-      return { ...prev, [k]: { ...cur, ...patch } };
+      const cur = prev[k] ?? { strokes: PARS[hole], gir: false, saved: false };
+      return { ...prev, [k]: { ...cur, ...patch, saved: false } };
     });
   }
 
   function step(hole: number, delta: number) {
     const cur = cells[key(player!.id, hole)]?.strokes ?? PARS[hole];
     const v = Math.max(1, Math.min(12, cur + delta));
-    if (v !== cur) patchCell(hole, { strokes: v });
+    if (v !== cur) edit(hole, { strokes: v });
   }
 
-  async function save() {
-    if (!id) return;
+  async function saveHole(hole: number) {
+    if (!player || !id) return;
+    const k = key(player.id, hole);
+    const c = cells[k];
+    if (!c) return;
+    setCells((prev) => ({ ...prev, [k]: { ...c, saved: true } }));
+    try {
+      await updateHole(id, player.id, hole, { strokes: c.strokes, gir: c.gir, saved: true });
+    } catch (e) {
+      setCells((prev) => ({ ...prev, [k]: { ...c, saved: false } }));
+      setError(e instanceof Error ? e.message : "Couldn't save that hole — check your connection.");
+    }
+  }
+
+  async function finish() {
+    if (!id || unsavedTotal > 0) return;
     setSaving(true);
     setError(null);
     try {
@@ -113,14 +133,19 @@ export default function ScoreEntry() {
           {players.map((p, i) => {
             const on = i === active;
             let t = 0;
-            for (const h of holes) t += cells[key(p.id, h)]?.strokes ?? PARS[h];
+            let un = 0;
+            for (const h of holes) {
+              const c = cells[key(p.id, h)];
+              t += c?.strokes ?? PARS[h];
+              if (!c?.saved) un++;
+            }
             return (
               <button
                 key={p.id}
                 onClick={() => setActive(i)}
                 style={{
                   flex: "none", display: "flex", alignItems: "center", gap: 8,
-                  padding: "7px 12px 7px 8px", borderRadius: 20, cursor: "pointer",
+                  padding: "7px 12px 7px 8px", borderRadius: 20, cursor: "pointer", position: "relative",
                   border: on ? "1.5px solid var(--green-900)" : "1px solid var(--line)",
                   background: on ? "var(--green-900)" : "var(--surface)",
                 }}
@@ -128,6 +153,7 @@ export default function ScoreEntry() {
                 <Avatar initials={p.initials} me={p.is_self} size={26} />
                 <span style={{ font: "600 14px var(--sans)", color: on ? "var(--sand)" : "var(--ink)" }}>{p.name.split(/\s+/)[0]}</span>
                 <span className="tnum" style={{ font: "600 14px var(--sans)", color: on ? "var(--gold)" : "var(--faint)" }}>{t}</span>
+                {un > 0 && <span title={`${un} unsaved`} style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--brass)" }} />}
               </button>
             );
           })}
@@ -137,13 +163,20 @@ export default function ScoreEntry() {
       <div className="scroll">
         <div style={{ padding: "2px 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
           {holes.map((h) => {
-            const c = cells[key(player!.id, h)] ?? { strokes: PARS[h], gir: false };
+            const c = cells[key(player!.id, h)] ?? { strokes: PARS[h], gir: false, saved: false };
             const par = PARS[h];
             const label = holeDiffLabel(c.strokes, par);
             const under = isBirdieOrBetter(c.strokes, par);
             const last = isSelf && compare ? compare.strokesByHole[h] : undefined;
             return (
-              <div key={h} className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 12px 12px 14px" }}>
+              <div
+                key={h}
+                className="card"
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 12px 12px 14px",
+                  borderLeft: c.saved ? "1px solid var(--line)" : "3px solid var(--brass)",
+                }}
+              >
                 <div style={{ flex: "none", width: 44, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                   <span className="tnum" style={{ width: 42, height: 42, borderRadius: 13, background: "var(--green-900)", color: "var(--sand)", font: "600 19px var(--sans)", display: "grid", placeItems: "center" }}>{h}</span>
                   <span style={{ font: "500 11px var(--sans)", color: "var(--faint)" }}>Par {par}</span>
@@ -165,13 +198,25 @@ export default function ScoreEntry() {
                   )}
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                     <span style={{ font: "600 12px var(--sans)", color: "var(--muted)" }}>GIR</span>
-                    <Toggle on={c.gir} onToggle={() => patchCell(h, { gir: !c.gir })} />
+                    <Toggle on={c.gir} onToggle={() => edit(h, { gir: !c.gir })} />
                   </div>
                   {last !== undefined && <CompareTag current={c.strokes} last={last} />}
                 </div>
 
-                <div style={{ flex: "none" }}>
+                <div style={{ flex: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                   <Stepper value={c.strokes} onDec={() => step(h, -1)} onInc={() => step(h, 1)} />
+                  {c.saved ? (
+                    <span style={{ font: "600 12px var(--sans)", color: "var(--faint)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <Check /> Saved
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => saveHole(h)}
+                      style={{ height: 30, padding: "0 18px", borderRadius: 10, border: "none", background: "var(--green-900)", color: "var(--sand)", font: "600 13px var(--sans)", cursor: "pointer" }}
+                    >
+                      Save
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -190,11 +235,24 @@ export default function ScoreEntry() {
             <span style={{ font: "600 17px var(--sans)", color: "var(--gold)" }}>{toParLabel(diff)}</span>
           </div>
         </div>
-        <button className="btn gold sm" style={{ marginLeft: "auto" }} onClick={save} disabled={saving}>
-          {saving ? <span className="spin" /> : "Save round"}
-        </button>
+        <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+          <button className="btn gold sm" onClick={finish} disabled={saving || unsavedTotal > 0}>
+            {saving ? <span className="spin" /> : "Save round"}
+          </button>
+          {unsavedTotal > 0 && (
+            <span style={{ font: "500 11px var(--sans)", color: "#d8b25a" }}>{unsavedTotal} hole{unsavedTotal === 1 ? "" : "s"} unsaved</span>
+          )}
+        </div>
       </div>
     </div>
+  );
+}
+
+function Check() {
+  return (
+    <span style={{ width: 13, height: 13, borderRadius: "50%", background: "var(--green-700)", display: "inline-grid", placeItems: "center", flex: "none" }}>
+      <span style={{ width: 6, height: 3, borderLeft: "1.5px solid var(--sand)", borderBottom: "1.5px solid var(--sand)", transform: "rotate(-45deg)", marginTop: -1 }} />
+    </span>
   );
 }
 
@@ -208,9 +266,7 @@ function CompareTag({ current, last }: { current: number; last: number }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 5, font: "500 11px var(--sans)", color: "var(--faint)" }}>
       <span>Last {last}</span>
-      <span style={{ color, fontWeight: 600 }}>
-        {arrow} {d === 0 ? "even" : `${Math.abs(d)}`}
-      </span>
+      <span style={{ color, fontWeight: 600 }}>{arrow} {d === 0 ? "even" : `${Math.abs(d)}`}</span>
     </span>
   );
 }

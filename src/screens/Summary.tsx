@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getRoundDetail } from "../lib/db";
+import { getRoundDetail, deleteRound } from "../lib/db";
 import type { Player, HoleScore, RoundMode, RoundDetail } from "../lib/types";
+import ConfirmDialog from "../components/ConfirmDialog";
 import {
   holesForMode, parTotalFor, PARS, toParLabel, isBirdie, scoreTone, modeLabel,
 } from "../lib/course";
@@ -31,7 +32,21 @@ export default function Summary() {
   const [loading, setLoading] = useState(true);
   const [gridPlayer, setGridPlayer] = useState<string | null>(null);
   const [shareFor, setShareFor] = useState<Player | null>(null);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { profile } = useAuth();
+
+  async function doDelete() {
+    if (!id) return;
+    setDeleting(true);
+    try {
+      await deleteRound(id);
+      navigate("/", { replace: true });
+    } catch {
+      setDeleting(false);
+      setConfirmDel(false);
+    }
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -171,8 +186,24 @@ export default function Summary() {
           </div>
 
           <button className="btn ghost" onClick={() => navigate("/", { replace: true })}>Done</button>
+          <button
+            onClick={() => setConfirmDel(true)}
+            style={{ alignSelf: "center", border: "none", background: "transparent", font: "500 14px var(--sans)", color: "#a8654a", cursor: "pointer", padding: "4px 8px" }}
+          >
+            Delete round
+          </button>
         </div>
       </div>
+
+      {confirmDel && (
+        <ConfirmDialog
+          title="Delete this round?"
+          body="This permanently removes the round and every score in it. This can't be undone."
+          busy={deleting}
+          onCancel={() => setConfirmDel(false)}
+          onConfirm={doDelete}
+        />
+      )}
 
       {shareFor && id && (
         <ShareInviteModal

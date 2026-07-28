@@ -158,7 +158,7 @@ export default function NewRound() {
                   })}
 
                   {adding ? (
-                    <div className="card" style={{ display: "flex", gap: 10, padding: "10px 12px", alignItems: "center" }}>
+                    <div className="card" style={{ display: "flex", gap: 8, padding: "10px 12px", alignItems: "center" }}>
                       <input
                         className="input" style={{ height: 46, flex: 1 }} autoFocus placeholder="Name"
                         value={newName} onChange={(e) => setNewName(e.target.value)}
@@ -167,7 +167,14 @@ export default function NewRound() {
                           if (e.key === "Escape") { setAdding(false); setNewName(""); }
                         }}
                       />
-                      <button className="btn sm" style={{ height: 46 }} onClick={submitNewPlayer}>Add</button>
+                      <button className="btn sm" style={{ height: 46, padding: "0 18px" }} onClick={submitNewPlayer}>Add</button>
+                      <button
+                        aria-label="Cancel"
+                        onClick={() => { setAdding(false); setNewName(""); }}
+                        style={{ width: 46, height: 46, flex: "none", borderRadius: 12, border: "1.5px solid var(--line-2)", background: "transparent", color: "var(--muted-2)", cursor: "pointer", font: "400 22px var(--sans)", lineHeight: 1 }}
+                      >
+                        ×
+                      </button>
                     </div>
                   ) : (
                     <button
@@ -187,27 +194,29 @@ export default function NewRound() {
 
               {/* Compare to a previous round */}
               {priorRounds.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     <span className="eyebrow">Challenge yourself</span>
                     <span style={{ font: "400 13px var(--sans)", color: "var(--faint)" }}>
                       Compare each hole against a past round.
                     </span>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    <CompareRow
-                      label="No comparison" sub="Just play"
-                      on={compareId === null} onClick={() => setCompareId(null)}
-                    />
-                    {priorRounds.map((r) => (
-                      <CompareRow
-                        key={r.round.id}
-                        label={formatRoundDate(r.round.played_on)}
-                        sub={`${modeLabel(r.round.mode)}${r.selfTotal !== null ? ` · ${r.selfTotal} (${toParLabel(r.selfDiff ?? 0)})` : ""}`}
-                        on={compareId === r.round.id}
-                        onClick={() => setCompareId(r.round.id)}
-                      />
-                    ))}
+                  <div style={{ position: "relative" }}>
+                    <select
+                      value={compareId ?? ""}
+                      onChange={(e) => setCompareId(e.target.value || null)}
+                      className="input"
+                      style={{ appearance: "none", WebkitAppearance: "none", paddingRight: 40, cursor: "pointer", font: "500 16px var(--sans)" }}
+                    >
+                      <option value="">No comparison — just play</option>
+                      {priorRounds.map((r) => (
+                        <option key={r.round.id} value={r.round.id}>
+                          {formatRoundDate(r.round.played_on)} · {modeLabel(r.round.mode)}
+                          {r.selfTotal !== null ? ` · ${r.selfTotal} (${toParLabel(r.selfDiff ?? 0)})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <span style={{ position: "absolute", right: 18, top: "50%", transform: "translateY(-70%) rotate(45deg)", width: 9, height: 9, borderRight: "2px solid var(--muted-2)", borderBottom: "2px solid var(--muted-2)", pointerEvents: "none" }} />
                   </div>
                 </div>
               )}
@@ -224,36 +233,6 @@ export default function NewRound() {
         </>
       )}
     </div>
-  );
-}
-
-function CompareRow({ label, sub, on, onClick }: { label: string; sub: string; on: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="card"
-      style={{
-        display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
-        cursor: "pointer", textAlign: "left", width: "100%",
-        background: on ? "#f0e8d6" : "var(--surface)",
-        border: on ? "1.5px solid var(--green-900)" : "1px solid var(--line)",
-      }}
-    >
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
-        <span style={{ font: "600 15px var(--sans)", color: "var(--ink)" }}>{label}</span>
-        <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>{sub}</span>
-      </div>
-      <span
-        style={{
-          width: 22, height: 22, borderRadius: "50%", flex: "none",
-          border: on ? "none" : "2px solid #c9b797",
-          background: on ? "var(--green-900)" : "#fffdf7",
-          display: "grid", placeItems: "center",
-        }}
-      >
-        {on && <span style={{ width: 9, height: 5, borderLeft: "2px solid var(--sand)", borderBottom: "2px solid var(--sand)", transform: "rotate(-45deg)", marginTop: -2 }} />}
-      </span>
-    </button>
   );
 }
 

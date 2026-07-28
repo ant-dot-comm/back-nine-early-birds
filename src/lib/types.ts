@@ -37,6 +37,7 @@ export interface HoleScore {
   par: number;
   strokes: number;
   gir: boolean;
+  saved: boolean;
 }
 
 export interface RoundPlayer {

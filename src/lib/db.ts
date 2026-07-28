@@ -195,12 +195,12 @@ export async function getRoundDetail(roundId: string): Promise<RoundDetail> {
   };
 }
 
-/** Update a single hole (strokes + gir) for a player. */
+/** Update a single hole (strokes, gir, and/or saved state) for a player. */
 export async function updateHole(
   roundId: string,
   playerId: string,
   hole: number,
-  patch: { strokes?: number; gir?: boolean }
+  patch: { strokes?: number; gir?: boolean; saved?: boolean }
 ): Promise<void> {
   const { error } = await supabase
     .from("hole_scores")
