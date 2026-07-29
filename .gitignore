@@ -9,3 +9,6 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 *.log
+
+# local-only: contains preview-account credentials
+docs/testing.md
