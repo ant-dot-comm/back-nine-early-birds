@@ -141,7 +141,8 @@ export async function listTournaments(): Promise<Tournament[]> {
 }
 
 export async function getTournamentStandings(tournamentId: string): Promise<TournamentStanding[]> {
-  const { data, error } = await supabase.rpc("tournament_standings", { p_tournament: tournamentId });
+  // tournament_board returns the frozen snapshot for completed tournaments, live standings otherwise.
+  const { data, error } = await supabase.rpc("tournament_board", { p_tournament: tournamentId });
   if (error) throw error;
   return (data as TournamentStanding[]) ?? [];
 }
