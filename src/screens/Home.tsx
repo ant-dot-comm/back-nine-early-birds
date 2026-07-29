@@ -6,6 +6,7 @@ import type { RoundSummaryRow, SeasonStats } from "../lib/db";
 import type { ScoreShare, LeaderboardRow, Challenge } from "../lib/types";
 import { Avatar, FullSpinner, Logo } from "../components/ui";
 import ConfirmDialog from "../components/ConfirmDialog";
+import AccountDrawer from "../components/AccountDrawer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan, faFlag } from "@fortawesome/free-solid-svg-icons";
 import { toParLabel, modeLabel, parTotalFor, personSub } from "../lib/course";
@@ -32,6 +33,7 @@ export default function Home() {
   const [busyShare, setBusyShare] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   function load() {
     getSeasonStats().then(setStats).catch(() => setStats(null));
@@ -106,10 +108,11 @@ export default function Home() {
     <div className="screen fade">
       <div className="safe-top" style={{ flex: "none", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 24px 4px" }}>
         <Logo width={140} />
-        <button onClick={() => navigate("/account")} aria-label="Account" style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer" }}>
+        <button onClick={() => setDrawerOpen(true)} aria-label="Account menu" style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer" }}>
           <Avatar initials={profile?.initials ?? "9"} me size={38} />
         </button>
       </div>
+      {drawerOpen && <AccountDrawer onClose={() => setDrawerOpen(false)} />}
 
       <div className="scroll">
         <div className="pad" style={{ display: "flex", flexDirection: "column", gap: 22 }}>

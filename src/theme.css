@@ -265,6 +265,18 @@ a {
   .fade-pop { animation: none; }
 }
 
+/* slide-in for the right-hand account drawer */
+.drawer-in {
+  animation: drawerIn 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes drawerIn {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawer-in { animation: none; }
+}
+
 /* fade-in for route content */
 .fade {
   animation: fade 0.28s ease both;

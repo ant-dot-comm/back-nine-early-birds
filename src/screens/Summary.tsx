@@ -150,17 +150,22 @@ export default function Summary() {
                   className="card"
                   style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", border: leader ? "1.5px solid var(--brass)" : "1px solid var(--line)" }}
                 >
-                  <Avatar initials={s.player.initials} me={s.player.is_self} size={34} />
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
-                    {(() => {
-                      const linkTo = s.player.is_self ? profile?.id : s.player.member_user_id;
-                      const nameStyle = { font: "600 16px var(--sans)", color: "var(--ink)", textDecoration: "none" } as const;
-                      return linkTo
-                        ? <Link to={`/player/${linkTo}`} style={nameStyle}>{s.player.name}</Link>
-                        : <span style={nameStyle}>{s.player.name}</span>;
-                    })()}
-                    <span style={{ font: "500 12px var(--sans)", color: leader || s.birdies > 0 ? "var(--brass)" : "var(--faint)" }}>{annotation(s)}</span>
-                  </div>
+                  {(() => {
+                    const linkTo = s.player.is_self ? profile?.id : s.player.member_user_id;
+                    const body = (
+                      <>
+                        <Avatar initials={s.player.initials} me={s.player.is_self} size={34} />
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
+                          <span style={{ font: "600 16px var(--sans)", color: "var(--ink)" }}>{s.player.name}</span>
+                          <span style={{ font: "500 12px var(--sans)", color: leader || s.birdies > 0 ? "var(--brass)" : "var(--faint)" }}>{annotation(s)}</span>
+                        </div>
+                      </>
+                    );
+                    const wrapStyle = { flex: 1, display: "flex", alignItems: "center", gap: 12, minWidth: 0, textDecoration: "none" } as const;
+                    return linkTo
+                      ? <Link to={`/player/${linkTo}`} style={wrapStyle}>{body}</Link>
+                      : <div style={wrapStyle}>{body}</div>;
+                  })()}
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                     <span className="tnum" style={{ font: "600 24px var(--sans)", color: "var(--ink)" }}>{s.total}</span>
                     <span style={{ font: "600 14px var(--sans)", color: s.diff < 0 ? "var(--brass)" : "var(--faint)" }}>{toParLabel(s.diff)}</span>
