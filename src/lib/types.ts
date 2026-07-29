@@ -75,13 +75,43 @@ export interface Challenge {
   challenger: string;
   defender: string;
   secret_name: string;
-  status: "pending" | "accepted" | "declined" | "settled" | "canceled";
+  status: "pending" | "accepted" | "in_round" | "declined" | "settled" | "canceled";
   challenger_display: string;
   defender_display: string;
   challenger_score: number | null;
   defender_score: number | null;
   winner: string | null;
   created_at: string;
+  round_id: string | null;
+  scorekeeper: string | null;
+}
+
+export interface Badge {
+  kind: string;
+  label: string;
+  detail: string | null;
+  value: number | null;
+  created_at: string;
+}
+
+export interface PublicProfile {
+  user_id: string;
+  display_name: string;
+  initials: string;
+  first_name: string | null;
+  last_name: string | null;
+  is_secret: boolean;
+  member_since: string;
+  rounds: number;
+  avg9: number | null;
+  avg18: number | null;
+  birdies: number;
+  eagles: number;
+  pars: number;
+  gir_pct: number | null;
+  challenges_won: number;
+  challenges_played: number;
+  held_name: string | null;
 }
 
 export type RoundMode = "back9" | "full18";

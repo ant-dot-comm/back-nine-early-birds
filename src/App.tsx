@@ -11,6 +11,7 @@ import Summary from "./screens/Summary";
 import Stats from "./screens/Stats";
 import Account from "./screens/Account";
 import RareNames from "./screens/RareNames";
+import PlayerProfile from "./screens/PlayerProfile";
 import JoinInvite from "./screens/JoinInvite";
 
 export default function App() {
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="/stats" element={<Stats />} />
         <Route path="/account" element={<Account />} />
         <Route path="/rare" element={<RareNames />} />
+        <Route path="/player/:id" element={<PlayerProfile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );

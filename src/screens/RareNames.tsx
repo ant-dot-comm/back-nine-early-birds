@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   getSecretRoster, getUnlockedSecrets, listMyChallenges, claimSecret, createChallenge,
@@ -98,12 +98,20 @@ export default function RareNames() {
               return (
                 <div key={r.name} className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", opacity: isUnlocked || r.holder ? 1 : 0.55, border: mineHold ? "1.5px solid var(--brass)" : "1px solid var(--line)" }}>
                   <FontAwesomeIcon icon={isUnlocked || mineHold ? faStar : faLock} style={{ color: mineHold ? "var(--brass)" : isUnlocked ? "var(--label-gold)" : "var(--faint)", fontSize: 13, width: 16 }} />
-                  <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-                    <span style={{ font: "600 15px var(--sans)", color: "var(--ink)" }}>{r.name}</span>
-                    <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>
-                      {mineHold ? "Yours" : r.holder ? `Held by ${r.holder_display}${personSub(r.holder_first, r.holder_last) ? ` (${personSub(r.holder_first, r.holder_last)})` : ""}` : isUnlocked ? "Unclaimed" : "Locked"}
-                    </span>
-                  </div>
+                  {(() => {
+                    const inner = (
+                      <>
+                        <span style={{ font: "600 15px var(--sans)", color: "var(--ink)" }}>{r.name}</span>
+                        <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>
+                          {mineHold ? "Yours" : r.holder ? `Held by ${r.holder_display}${personSub(r.holder_first, r.holder_last) ? ` (${personSub(r.holder_first, r.holder_last)})` : ""}` : isUnlocked ? "Unclaimed" : "Locked"}
+                        </span>
+                      </>
+                    );
+                    const style = { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", textDecoration: "none" } as const;
+                    return r.holder
+                      ? <Link to={`/player/${r.holder}`} style={style}>{inner}</Link>
+                      : <div style={style}>{inner}</div>;
+                  })()}
                   {mineHold ? (
                     <span className="chip" style={{ fontSize: 10 }}>Yours</span>
                   ) : !isUnlocked ? (

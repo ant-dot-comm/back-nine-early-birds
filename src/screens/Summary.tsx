@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { getRoundDetail, deleteRound, shareScoreToMember } from "../lib/db";
 import type { Player, HoleScore, RoundMode, RoundDetail } from "../lib/types";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -152,7 +152,13 @@ export default function Summary() {
                 >
                   <Avatar initials={s.player.initials} me={s.player.is_self} size={34} />
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
-                    <span style={{ font: "600 16px var(--sans)", color: "var(--ink)" }}>{s.player.name}</span>
+                    {(() => {
+                      const linkTo = s.player.is_self ? profile?.id : s.player.member_user_id;
+                      const nameStyle = { font: "600 16px var(--sans)", color: "var(--ink)", textDecoration: "none" } as const;
+                      return linkTo
+                        ? <Link to={`/player/${linkTo}`} style={nameStyle}>{s.player.name}</Link>
+                        : <span style={nameStyle}>{s.player.name}</span>;
+                    })()}
                     <span style={{ font: "500 12px var(--sans)", color: leader || s.birdies > 0 ? "var(--brass)" : "var(--faint)" }}>{annotation(s)}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>

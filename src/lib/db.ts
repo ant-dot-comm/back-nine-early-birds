@@ -13,6 +13,8 @@ import type {
   DisplayNameType,
   RareName,
   Challenge,
+  Badge,
+  PublicProfile,
 } from "./types";
 import { formatRoundDate } from "./date";
 
@@ -105,6 +107,26 @@ export async function listMyChallenges(): Promise<Challenge[]> {
   const { data, error } = await supabase.rpc("list_my_challenges");
   if (error) throw error;
   return (data as Challenge[]) ?? [];
+}
+
+/** Start the live round that settles an accepted challenge; returns its round id. */
+export async function startChallengeRound(challengeId: string, mode: RoundMode): Promise<string> {
+  const { data, error } = await supabase.rpc("start_challenge_round", { p_challenge: challengeId, p_mode: mode });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function getPublicProfile(userId: string): Promise<PublicProfile | null> {
+  const { data, error } = await supabase.rpc("public_profile", { p_user: userId });
+  if (error) throw error;
+  const rows = data as PublicProfile[];
+  return rows && rows.length ? rows[0] : null;
+}
+
+export async function getPublicBadges(userId: string): Promise<Badge[]> {
+  const { data, error } = await supabase.rpc("public_badges", { p_user: userId });
+  if (error) throw error;
+  return (data as Badge[]) ?? [];
 }
 
 // ---- players ----------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare, getMemberLeaderboard, listMyChallenges, respondChallenge, cancelChallenge } from "../lib/db";
+import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare, getMemberLeaderboard, listMyChallenges, respondChallenge, cancelChallenge, startChallengeRound } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
 import type { ScoreShare, LeaderboardRow, Challenge } from "../lib/types";
 import { Avatar, FullSpinner, Logo } from "../components/ui";
@@ -44,7 +44,8 @@ export default function Home() {
 
   const myId = profile?.id;
   const incoming = challenges.filter((c) => c.status === "pending" && c.defender === myId);
-  const active = challenges.filter((c) => c.status === "accepted");
+  const accepted = challenges.filter((c) => c.status === "accepted");
+  const inRound = challenges.filter((c) => c.status === "in_round");
 
   async function respondChal(id: string, accept: boolean) {
     setBusyChal(id);
@@ -53,6 +54,13 @@ export default function Home() {
   async function cancelChal(id: string) {
     setBusyChal(id);
     try { await cancelChallenge(id); load(); } finally { setBusyChal(null); }
+  }
+  async function startChal(id: string) {
+    setBusyChal(id);
+    try {
+      const roundId = await startChallengeRound(id, "back9");
+      navigate(`/rounds/${roundId}/score`);
+    } catch { setBusyChal(null); }
   }
 
   async function accept(s: ScoreShare) {
@@ -153,14 +161,14 @@ export default function Home() {
           )}
 
           {/* Rare-name challenges */}
-          {(incoming.length > 0 || active.length > 0) && (
+          {(incoming.length > 0 || accepted.length > 0 || inRound.length > 0) && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>Rare-name challenges</h2>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {incoming.map((c) => (
                   <div key={c.id} className="card" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12, border: "1.5px solid var(--brass)" }}>
                     <div style={{ font: "500 14px/1.5 var(--sans)", color: "var(--ink)" }}>
-                      <b>{c.challenger_display}</b> is challenging you for <b style={{ color: "var(--brass)" }}>{c.secret_name}</b>. Beat them in a round together to keep it.
+                      <b>{c.challenger_display}</b> is challenging you for <b style={{ color: "var(--brass)" }}>{c.secret_name}</b>. Play a round together — lower score keeps it.
                     </div>
                     <div style={{ display: "flex", gap: 10 }}>
                       <button className="btn sm" style={{ flex: 1, height: 44 }} onClick={() => respondChal(c.id, true)} disabled={busyChal === c.id}>
@@ -170,20 +178,36 @@ export default function Home() {
                     </div>
                   </div>
                 ))}
-                {active.map((c) => {
-                  const iChallenged = c.challenger === myId;
-                  const other = iChallenged ? c.defender_display : c.challenger_display;
+                {accepted.map((c) => {
+                  const other = c.challenger === myId ? c.defender_display : c.challenger_display;
                   return (
-                    <div key={c.id} className="card" style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-                        <span style={{ font: "600 14px var(--sans)", color: "var(--ink)" }}>
-                          {iChallenged ? `You vs ${other}` : `${other} vs you`} · <span style={{ color: "var(--brass)" }}>{c.secret_name}</span>
-                        </span>
-                        <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>Log a round together — low score wins the name.</span>
+                    <div key={c.id} className="card" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12, border: "1.5px solid var(--brass)" }}>
+                      <div style={{ font: "500 14px/1.5 var(--sans)", color: "var(--ink)" }}>
+                        Accepted — <b>you vs {other}</b> for <b style={{ color: "var(--brass)" }}>{c.secret_name}</b>. Start the round when you're together; whoever starts keeps score.
                       </div>
-                      <button onClick={() => cancelChal(c.id)} disabled={busyChal === c.id} style={{ border: "none", background: "transparent", font: "500 12px var(--sans)", color: "var(--muted-2)", cursor: "pointer" }}>
-                        {busyChal === c.id ? "…" : "Cancel"}
-                      </button>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button className="btn sm" style={{ flex: 1, height: 44 }} onClick={() => startChal(c.id)} disabled={busyChal === c.id}>
+                          {busyChal === c.id ? <span className="spin on-dark" /> : "Start challenge round"}
+                        </button>
+                        <button className="btn ghost sm" style={{ height: 44 }} onClick={() => cancelChal(c.id)} disabled={busyChal === c.id}>Cancel</button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {inRound.map((c) => {
+                  const other = c.challenger === myId ? c.defender_display : c.challenger_display;
+                  const iKeepScore = c.scorekeeper === myId;
+                  return (
+                    <div key={c.id} className="card" style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, border: "1.5px solid var(--green-900)" }}>
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                        <span style={{ font: "600 14px var(--sans)", color: "var(--ink)" }}>Challenge round in progress · <span style={{ color: "var(--brass)" }}>{c.secret_name}</span></span>
+                        <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>
+                          You vs {other} · {iKeepScore ? "you're keeping score" : `${c.challenger === myId ? c.defender_display : c.challenger_display} is keeping score`}
+                        </span>
+                      </div>
+                      {iKeepScore && c.round_id && (
+                        <button className="btn sm" style={{ height: 40 }} onClick={() => navigate(`/rounds/${c.round_id}/score`)}>Score</button>
+                      )}
                     </div>
                   );
                 })}
@@ -385,14 +409,14 @@ function Leaderboard({ board, meId }: { board: LeaderboardRow[]; meId?: string }
                 border: me ? "2px solid var(--green-900)" : "1px solid var(--line)",
               }}
             >
-              <div style={{ width: NAME_W, flex: "none", display: "flex", flexDirection: "column", paddingLeft: 6, minWidth: 0 }}>
+              <Link to={`/player/${r.user_id}`} style={{ width: NAME_W, flex: "none", display: "flex", flexDirection: "column", paddingLeft: 6, minWidth: 0, textDecoration: "none" }}>
                 <span style={{ font: "600 14px var(--sans)", color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {r.display_name}{me ? " · You" : ""}
                 </span>
                 <span style={{ font: "400 11px var(--sans)", color: "var(--faint)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {sub ? `${sub} · ${roundsLabel}` : roundsLabel}
                 </span>
-              </div>
+              </Link>
               {cols.map((c) => (
                 <span key={c.key} className="tnum" style={{ width: CELL_W, flex: "none", textAlign: "center", font: "600 15px var(--sans)", color: c.accent ? "var(--brass)" : "var(--ink)" }}>
                   {c.get(r)}

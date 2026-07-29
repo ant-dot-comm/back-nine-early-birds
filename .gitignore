@@ -8,6 +8,7 @@ dist-ssr
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+.claude/
 *.log
 
 # local-only: contains preview-account credentials
