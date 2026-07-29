@@ -77,8 +77,8 @@ export default function Account() {
             <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
               <span className="h-serif" style={{ font: "600 24px var(--serif)" }}>{profile?.display_name ?? "—"}</span>
               {isSecret && (
-                <span className="chip" style={{ alignSelf: "flex-start", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                  <FontAwesomeIcon icon={faStar} /> Ultra-rare
+                <span className="chip" style={{ alignSelf: "flex-start", fontSize: 9, letterSpacing: "0.03em", textTransform: "uppercase", padding: "4px 9px" }}>
+                  <FontAwesomeIcon icon={faStar} /> Ultra-rare name unlocked
                 </span>
               )}
               <span style={{ font: "400 14px var(--sans)", color: "var(--faint)" }}>{session?.user.email}</span>

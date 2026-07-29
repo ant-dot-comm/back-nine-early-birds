@@ -114,12 +114,12 @@ export default function GolfNameGenerator({
         <>
           {/* preview */}
           {secret ? (
-            <div className="fade-pop" style={{ background: "var(--green-900)", borderRadius: 16, padding: "18px 16px", textAlign: "center", display: "flex", flexDirection: "column", gap: 6, border: "2px solid var(--gold)" }}>
-              <span style={{ font: "700 10px var(--sans)", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--gold)" }}>
+            <div className="fade-pop" style={{ background: "linear-gradient(135deg, #e7c877, #cb9f39)", borderRadius: 16, padding: "18px 16px", textAlign: "center", display: "flex", flexDirection: "column", gap: 6, border: "2px solid #8a6620" }}>
+              <span style={{ font: "700 10px var(--sans)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--green-900)" }}>
                 <FontAwesomeIcon icon={faStar} /> Ultra-rare golf name
               </span>
-              <span className="h-serif" style={{ font: "600 26px var(--serif)", color: "var(--sand)" }}>{secret}</span>
-              <span style={{ font: "400 11px var(--sans)", color: "#9fb39a" }}>Rerolling gives it up.</span>
+              <span className="h-serif" style={{ font: "700 26px var(--serif)", color: "var(--green-900)" }}>{secret}</span>
+              <span style={{ font: "500 11px var(--sans)", color: "#5c4a1e" }}>Rerolling gives it up.</span>
             </div>
           ) : (
             <div className="card" style={{ padding: "18px 16px", textAlign: "center" }}>
