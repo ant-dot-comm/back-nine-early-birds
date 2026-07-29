@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDice, faStar } from "@fortawesome/free-solid-svg-icons";
 import {
-  ADJECTIVES, NOUNS, NICKNAMES, randomGolfName, formatGolfName, type GolfNameParts,
+  ADJECTIVES, NOUNS, NICKNAMES, SECRET_NAMES, randomGolfName, formatGolfName, type GolfNameParts,
 } from "../lib/golfNames";
 import { rollSecretName } from "../lib/db";
 import type { DisplayNameType } from "../lib/types";
@@ -19,10 +19,13 @@ const REROLLS_BEFORE_MANUAL = 5;
 export default function GolfNameGenerator({
   allowSecret = false,
   unlockedSecrets = [],
+  previewSecret = false,
   onChange,
 }: {
   allowSecret?: boolean;
   unlockedSecrets?: string[];
+  /** Dev/testing: start in the ultra-rare reveal state (no real grant). */
+  previewSecret?: boolean;
   onChange: (sel: NameSelection) => void;
 }) {
   const [tab, setTab] = useState<"golf" | "custom">("golf");
@@ -30,17 +33,18 @@ export default function GolfNameGenerator({
   const [rerolls, setRerolls] = useState(0);
   const [manual, setManual] = useState(false);
   const [custom, setCustom] = useState("");
-  const [secret, setSecret] = useState<string | null>(null);
+  const [secret, setSecret] = useState<string | null>(previewSecret ? SECRET_NAMES[0] : null);
   const [rolling, setRolling] = useState(false);
   const emitted = useRef(false);
 
-  // Emit the initial generated name once.
+  // Emit the initial name once.
   useEffect(() => {
     if (!emitted.current) {
       emitted.current = true;
-      onChange({ name: formatGolfName(parts), type: "generated", parts });
+      if (previewSecret) onChange({ name: SECRET_NAMES[0], type: "secret", secret: SECRET_NAMES[0] });
+      else onChange({ name: formatGolfName(parts), type: "generated", parts });
     }
-  }, [parts, onChange]);
+  }, [parts, onChange, previewSecret]);
 
   function emitGenerated(p: GolfNameParts) {
     setSecret(null);

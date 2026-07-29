@@ -79,7 +79,7 @@ export default function SetName() {
 
           <div className="field">
             <label className="label">Display name</label>
-            <GolfNameGenerator allowSecret onChange={onNameChange} />
+            <GolfNameGenerator allowSecret previewSecret={params.get("rare") === "1"} onChange={onNameChange} />
           </div>
 
           {error && <ErrorNote>{error}</ErrorNote>}
