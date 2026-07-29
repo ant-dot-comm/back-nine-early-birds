@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { holesForMode, PARS, initialsFromNames, initialsOf } from "./course";
+import { holesForMode, PARS } from "./course";
 import type {
   Player,
   Profile,
@@ -10,6 +10,7 @@ import type {
   Member,
   LeaderboardRow,
   ScoreShare,
+  DisplayNameType,
 } from "./types";
 import { formatRoundDate } from "./date";
 
@@ -29,45 +30,39 @@ export interface ProfileInput {
   firstName: string;
   lastName: string;
   displayName: string;
+  type?: DisplayNameType;
+  parts?: { adjective: string; noun: string; nickname: string } | null;
+  secret?: string | null;
 }
 
 /**
- * Save the profile (first/last/display) AND keep the "self" player in sync so
- * the user shows up on leaderboards under their display name.
+ * Save the profile via a server RPC that validates secret-name entitlement and
+ * keeps the "self" player in sync. Secret status can't be forged from the client.
  */
-export async function saveProfile(
-  userId: string,
-  input: ProfileInput
-): Promise<Profile> {
-  let initials = initialsFromNames(input.firstName, input.lastName);
-  if (initials === "?") initials = initialsOf(input.displayName);
-  const { data, error } = await supabase
-    .from("profiles")
-    .upsert({
-      id: userId,
-      first_name: input.firstName.trim(),
-      last_name: input.lastName.trim(),
-      display_name: input.displayName.trim(),
-      initials,
-    })
-    .select()
-    .single();
+export async function saveProfile(_userId: string, input: ProfileInput): Promise<void> {
+  const { error } = await supabase.rpc("save_profile", {
+    p_first: input.firstName,
+    p_last: input.lastName,
+    p_display: input.displayName,
+    p_type: input.type ?? "custom",
+    p_parts: input.parts ?? null,
+    p_secret: input.secret ?? null,
+  });
   if (error) throw error;
+}
 
-  const { data: selfPlayer } = await supabase
-    .from("players")
-    .select("id")
-    .eq("is_self", true)
-    .maybeSingle();
+/** Signup-only: server-side 1-in-N roll. Returns a secret name on a hit, else null. */
+export async function rollSecretName(): Promise<string | null> {
+  const { data, error } = await supabase.rpc("roll_secret_name");
+  if (error) throw error;
+  return (data as string | null) ?? null;
+}
 
-  const playerFields = { name: input.displayName.trim(), initials };
-  if (selfPlayer) {
-    await supabase.from("players").update(playerFields).eq("id", selfPlayer.id);
-  } else {
-    await supabase.from("players").insert({ ...playerFields, is_self: true });
-  }
-
-  return data;
+/** Secret names the signed-in user has unlocked via the rounds-played achievement. */
+export async function getUnlockedSecrets(): Promise<string[]> {
+  const { data, error } = await supabase.rpc("unlocked_secret_names");
+  if (error) throw error;
+  return (data as string[]) ?? [];
 }
 
 // ---- players ----------------------------------------------------------------
@@ -104,9 +99,9 @@ export async function listMembers(): Promise<Member[]> {
   return (data as Member[]) ?? [];
 }
 
-/** Season leaderboard across all members for a format (aggregate stats only). */
-export async function getMemberLeaderboard(mode: RoundMode = "back9"): Promise<LeaderboardRow[]> {
-  const { data, error } = await supabase.rpc("member_leaderboard", { p_mode: mode });
+/** Season leaderboard across all members (aggregate stats only). */
+export async function getMemberLeaderboard(): Promise<LeaderboardRow[]> {
+  const { data, error } = await supabase.rpc("member_leaderboard");
   if (error) throw error;
   return (data as LeaderboardRow[]) ?? [];
 }
@@ -519,22 +514,24 @@ export async function listDraftRounds(): Promise<RoundSummaryRow[]> {
 
 export interface SeasonStats {
   roundsPlayed: number;
+  avg9: number | null;
+  avg18: number | null;
   birdies: number;
   eagles: number;
   pars: number;
-  scoringAvg: number | null;
   girPct: number | null;
 }
 
-/** Aggregate stats for the signed-in user (their own card) this year, by format. */
-export async function getSeasonStats(mode: RoundMode = "back9"): Promise<SeasonStats> {
+/** Season card for the signed-in user: cumulative counts + separate 9/18 averages. */
+export async function getSeasonStats(): Promise<SeasonStats> {
   const yearStart = `${new Date().getFullYear()}-01-01`;
   const empty: SeasonStats = {
     roundsPlayed: 0,
+    avg9: null,
+    avg18: null,
     birdies: 0,
     eagles: 0,
     pars: 0,
-    scoringAvg: null,
     girPct: null,
   };
 
@@ -547,17 +544,18 @@ export async function getSeasonStats(mode: RoundMode = "back9"): Promise<SeasonS
 
   const { data: rounds } = await supabase
     .from("rounds")
-    .select("id")
+    .select("id, mode")
     .eq("is_final", true)
-    .eq("mode", mode)
     .gte("played_on", yearStart);
 
-  const roundIds = (rounds ?? []).map((r) => r.id);
+  const roundMode = new Map<string, RoundMode>();
+  (rounds ?? []).forEach((r) => roundMode.set(r.id, r.mode as RoundMode));
+  const roundIds = [...roundMode.keys()];
   if (roundIds.length === 0) return empty;
 
   const { data: scores } = await supabase
     .from("hole_scores")
-    .select("round_id, hole, par, strokes, gir")
+    .select("round_id, par, strokes, gir")
     .eq("player_id", selfPlayer.id)
     .in("round_id", roundIds);
 
@@ -566,27 +564,27 @@ export async function getSeasonStats(mode: RoundMode = "back9"): Promise<SeasonS
   let eagles = 0;
   let pars = 0;
   let girHit = 0;
-
-  const perRound = new Map<string, { strokes: number; par: number }>();
+  const perRound = new Map<string, number>();
   for (const s of rows) {
     if (s.strokes === s.par - 1) birdies++;
     if (s.strokes <= s.par - 2) eagles++;
     if (s.strokes === s.par) pars++;
     if (s.gir) girHit++;
-    const acc = perRound.get(s.round_id) ?? { strokes: 0, par: 0 };
-    acc.strokes += s.strokes;
-    acc.par += s.par;
-    perRound.set(s.round_id, acc);
+    perRound.set(s.round_id, (perRound.get(s.round_id) ?? 0) + s.strokes);
   }
 
-  const totals = [...perRound.values()].map((r) => r.strokes);
+  const avg = (mode: RoundMode) => {
+    const totals = [...perRound.entries()].filter(([id]) => roundMode.get(id) === mode).map(([, t]) => t);
+    return totals.length ? Math.round((totals.reduce((a, b) => a + b, 0) / totals.length) * 10) / 10 : null;
+  };
 
   return {
     roundsPlayed: perRound.size,
+    avg9: avg("back9"),
+    avg18: avg("full18"),
     birdies,
     eagles,
     pars,
-    scoringAvg: totals.length ? totals.reduce((a, b) => a + b, 0) / totals.length : null,
     girPct: rows.length ? (girHit / rows.length) * 100 : null,
   };
 }

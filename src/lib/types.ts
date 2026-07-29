@@ -1,9 +1,13 @@
+export type DisplayNameType = "custom" | "generated" | "secret";
+
 export interface Profile {
   id: string;
   display_name: string;
   initials: string;
   first_name: string | null;
   last_name: string | null;
+  display_name_type: DisplayNameType;
+  secret_name: string | null;
   created_at: string;
 }
 
@@ -34,7 +38,8 @@ export interface LeaderboardRow {
   last_name: string | null;
   initials: string;
   rounds: number;
-  avg_score: number | null;
+  avg9: number | null;
+  avg18: number | null;
   birdies: number;
   eagles: number;
   pars: number;

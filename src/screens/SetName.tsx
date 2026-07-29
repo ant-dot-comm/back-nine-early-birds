@@ -1,10 +1,9 @@
-import { useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { saveProfile, claimInvite } from "../lib/db";
-import { Avatar, ErrorNote } from "../components/ui";
-import GolfNameModal from "../components/GolfNameModal";
-import { golfName, initialsFromNames } from "../lib/course";
+import { ErrorNote } from "../components/ui";
+import GolfNameGenerator, { type NameSelection } from "../components/GolfNameGenerator";
 import { getPendingInvite, clearPendingInvite } from "../lib/invite";
 
 export default function SetName() {
@@ -12,37 +11,21 @@ export default function SetName() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
-  // Prefill from an invite link (via storage) or the URL query.
   const pending = getPendingInvite();
-  const prefillFirst = pending?.first || params.get("first") || "";
-  const prefillLast = pending?.last || params.get("last") || "";
-
-  const [first, setFirst] = useState(prefillFirst);
-  const [last, setLast] = useState(prefillLast);
-  const [display, setDisplay] = useState(golfName(prefillFirst, prefillLast));
-  const [displayTouched, setDisplayTouched] = useState(!!(prefillFirst && prefillLast));
-  const [editing, setEditing] = useState(false);
+  const [first, setFirst] = useState(pending?.first || params.get("first") || "");
+  const [last, setLast] = useState(pending?.last || params.get("last") || "");
+  const [sel, setSel] = useState<NameSelection | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const initials = useMemo(() => initialsFromNames(first, last), [first, last]);
-  const autoName = useMemo(() => golfName(first, last), [first, last]);
-  const shownDisplay = displayTouched ? display : autoName;
-
-  function onFirst(v: string) {
-    setFirst(v);
-    if (!displayTouched) setDisplay(golfName(v, last));
-  }
-  function onLast(v: string) {
-    setLast(v);
-    if (!displayTouched) setDisplay(golfName(first, v));
-  }
+  const onNameChange = useCallback((s: NameSelection) => setSel(s), []);
 
   async function submit() {
     if (first.trim().length < 1 || last.trim().length < 1) {
       return setError("Please enter your first and last name.");
     }
-    const displayName = (shownDisplay || autoName || first).trim();
+    const name = sel?.name?.trim();
+    if (!name) return setError("Pick or enter a display name.");
     if (!session) return;
     setBusy(true);
     setError(null);
@@ -50,9 +33,11 @@ export default function SetName() {
       await saveProfile(session.user.id, {
         firstName: first,
         lastName: last,
-        displayName,
+        displayName: name,
+        type: sel!.type,
+        parts: sel!.parts,
+        secret: sel!.secret,
       });
-      // If they arrived from a score invite, claim it into their new account.
       const inv = getPendingInvite();
       if (inv) {
         try {
@@ -72,71 +57,40 @@ export default function SetName() {
 
   return (
     <div className="screen fade">
-      <div className="pad safe-top" style={{ flex: 1, display: "flex", flexDirection: "column", paddingTop: 40 }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
-          <Avatar initials={initials} me size={64} />
-          <h1 className="h-serif" style={{ font: "600 30px/1.15 var(--serif)", marginTop: 12 }}>
-            Welcome to the group
-          </h1>
-          <p style={{ margin: 0, font: "400 15px/1.5 var(--sans)", color: "var(--muted)" }}>
-            Tell us who you are — we'll spin up your golf name.
-          </p>
+      <div className="scroll">
+        <div className="pad safe-top" style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 36 }}>
+          <div>
+            <h1 className="h-serif" style={{ font: "600 30px/1.15 var(--serif)" }}>Welcome to the group</h1>
+            <p style={{ margin: "6px 0 0", font: "400 15px/1.5 var(--sans)", color: "var(--muted)" }}>
+              Build your own golf alter ego or roll the dice for a random one. Every reroll here has a tiny chance of uncovering an <b style={{ color: "var(--brass)" }}>ultra-rare secret name</b> — only discoverable during signup, so choose carefully.
+            </p>
+          </div>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+          <div style={{ display: "flex", gap: 10 }}>
             <div className="field" style={{ flex: 1 }}>
               <label className="label">First name</label>
-              <input className="input" autoFocus value={first} onChange={(e) => onFirst(e.target.value)} placeholder="Antoni" />
+              <input className="input" autoFocus value={first} onChange={(e) => setFirst(e.target.value)} placeholder="Antoni" />
             </div>
             <div className="field" style={{ flex: 1 }}>
               <label className="label">Last name</label>
-              <input className="input" value={last} onChange={(e) => onLast(e.target.value)} placeholder="Commodore" />
+              <input className="input" value={last} onChange={(e) => setLast(e.target.value)} placeholder="Commodore" />
             </div>
           </div>
 
           <div className="field">
-            <label className="label">Display name (your golf name)</label>
-            <div
-              className="input"
-              style={{ display: "flex", alignItems: "center", gap: 10, cursor: "default" }}
-            >
-              <span style={{ flex: 1, font: "600 17px var(--sans)", color: shownDisplay ? "var(--ink)" : "var(--faint)" }}>
-                {shownDisplay || "Enter your name above"}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setDisplay(shownDisplay);
-                  setEditing(true);
-                }}
-                style={{ border: "none", background: "transparent", font: "600 13px var(--sans)", color: "var(--brass)", cursor: "pointer", padding: 0 }}
-              >
-                Edit
-              </button>
-            </div>
-            <p style={{ margin: "2px 0 0", font: "400 13px var(--sans)", color: "var(--faint)" }}>
-              Auto-picked from your initials · {initials}. Tap Edit to change it.
-            </p>
+            <label className="label">Display name</label>
+            <GolfNameGenerator allowSecret onChange={onNameChange} />
           </div>
-          {error && <ErrorNote>{error}</ErrorNote>}
-        </div>
-        <button className="btn" onClick={submit} disabled={busy}>
-          {busy ? <span className="spin on-dark" /> : "Continue"}
-        </button>
-      </div>
 
-      {editing && (
-        <GolfNameModal
-          initial={shownDisplay}
-          first={first}
-          last={last}
-          onClose={() => setEditing(false)}
-          onSave={(v) => {
-            setDisplay(v);
-            setDisplayTouched(true);
-            setEditing(false);
-          }}
-        />
-      )}
+          {error && <ErrorNote>{error}</ErrorNote>}
+          <button className="btn" onClick={submit} disabled={busy} style={{ marginTop: 4 }}>
+            {busy ? <span className="spin on-dark" /> : "Continue"}
+          </button>
+          <p style={{ margin: "0 0 8px", font: "400 12px/1.5 var(--sans)", color: "var(--faint)", textAlign: "center" }}>
+            You can change your display name later — but secret rolls are only available here.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare, getMemberLeaderboard } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
-import type { ScoreShare, LeaderboardRow, RoundMode } from "../lib/types";
+import type { ScoreShare, LeaderboardRow } from "../lib/types";
 import { Avatar, FullSpinner, Logo } from "../components/ui";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,17 +27,16 @@ export default function Home() {
   const [shares, setShares] = useState<ScoreShare[]>([]);
   const [board, setBoard] = useState<LeaderboardRow[]>([]);
   const [statView, setStatView] = useState<"you" | "everyone">("you");
-  const [statMode, setStatMode] = useState<RoundMode>("back9");
   const [busyShare, setBusyShare] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   function load() {
-    getSeasonStats(statMode).then(setStats).catch(() => setStats(null));
+    getSeasonStats().then(setStats).catch(() => setStats(null));
     listRecentRounds(5).then(setRounds).catch(() => setRounds([]));
     listDraftRounds().then(setDrafts).catch(() => setDrafts([]));
     listPendingShares().then(setShares).catch(() => setShares([]));
-    getMemberLeaderboard(statMode).then(setBoard).catch(() => setBoard([]));
+    getMemberLeaderboard().then(setBoard).catch(() => setBoard([]));
   }
 
   async function accept(s: ScoreShare) {
@@ -60,11 +59,10 @@ export default function Home() {
     }
   }
 
-  // Refetch when the format toggle changes (stats + leaderboard are per-format).
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statMode]);
+  }, []);
 
   async function doDelete() {
     if (!confirmId) return;
@@ -177,7 +175,9 @@ export default function Home() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>{new Date().getFullYear()} season</h2>
+              <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>
+                {new Date().getFullYear()} season{stats && stats.roundsPlayed > 0 ? ` (${stats.roundsPlayed} ${stats.roundsPlayed === 1 ? "round" : "rounds"})` : ""}
+              </h2>
               <select
                 value={statView}
                 onChange={(e) => setStatView(e.target.value as "you" | "everyone")}
@@ -186,16 +186,6 @@ export default function Home() {
                 <option value="you">Your card</option>
                 <option value="everyone">Everyone</option>
               </select>
-            </div>
-            <div style={{ display: "flex", gap: 4, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 3, alignSelf: "flex-start" }}>
-              {(["back9", "full18"] as RoundMode[]).map((m) => {
-                const on = statMode === m;
-                return (
-                  <button key={m} onClick={() => setStatMode(m)} style={{ height: 30, padding: "0 14px", borderRadius: 8, border: "none", cursor: "pointer", font: "600 12px var(--sans)", background: on ? "var(--green-900)" : "transparent", color: on ? "var(--sand)" : "var(--muted-2)" }}>
-                    {modeLabel(m)}
-                  </button>
-                );
-              })}
             </div>
             {statView === "you" ? <StatTiles stats={stats} /> : <Leaderboard board={board} meId={profile?.id} />}
           </div>
@@ -270,18 +260,18 @@ function RoundRow({ row, onClick, onDelete }: { row: RoundSummaryRow; onClick: (
 
 function StatTiles({ stats }: { stats: SeasonStats | null }) {
   const tiles: { label: string; value: string; accent?: boolean }[] = [
-    { label: "Rounds", value: stats ? String(stats.roundsPlayed) : "—" },
+    { label: "9-hole avg", value: stats?.avg9 == null ? "—" : stats.avg9.toFixed(1) },
+    { label: "18-hole avg", value: stats?.avg18 == null ? "—" : stats.avg18.toFixed(1) },
+    { label: "GIR", value: stats?.girPct == null ? "—" : `${Math.round(stats.girPct)}%` },
     { label: "Birdies", value: stats ? String(stats.birdies) : "—", accent: true },
     { label: "Eagles", value: stats ? String(stats.eagles) : "—", accent: true },
     { label: "Pars", value: stats ? String(stats.pars) : "—" },
-    { label: "Scoring avg", value: stats?.scoringAvg == null ? "—" : stats.scoringAvg.toFixed(1) },
-    { label: "GIR", value: stats?.girPct == null ? "—" : `${Math.round(stats.girPct)}%` },
   ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
       {tiles.map((t) => (
         <div key={t.label} className="card" style={{ padding: "14px 14px 13px", display: "flex", flexDirection: "column", gap: 6 }}>
-          <span style={{ font: "500 11px var(--sans)", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--faint)" }}>{t.label}</span>
+          <span style={{ font: "500 11px var(--sans)", letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--faint)" }}>{t.label}</span>
           <span className="tnum" style={{ font: "600 26px var(--sans)", lineHeight: 1, color: t.accent ? "var(--brass)" : "var(--green-900)" }}>{t.value}</span>
         </div>
       ))}
@@ -306,21 +296,21 @@ function Leaderboard({ board, meId }: { board: LeaderboardRow[]; meId?: string }
   }
 
   const cols: { key: string; label: string; get: (r: LeaderboardRow) => string; accent?: boolean }[] = [
-    { key: "avg", label: "Avg", get: (r) => (r.avg_score == null ? "—" : r.avg_score.toFixed(1)), accent: true },
-    { key: "rds", label: "Rds", get: (r) => String(r.rounds) },
-    { key: "bird", label: "Bird", get: (r) => String(r.birdies), accent: true },
-    { key: "eag", label: "Eag", get: (r) => String(r.eagles), accent: true },
+    { key: "a9", label: "9 avg", get: (r) => (r.avg9 == null ? "—" : r.avg9.toFixed(1)), accent: true },
+    { key: "a18", label: "18 avg", get: (r) => (r.avg18 == null ? "—" : r.avg18.toFixed(1)), accent: true },
+    { key: "bird", label: "Bird", get: (r) => String(r.birdies) },
+    { key: "eag", label: "Eag", get: (r) => String(r.eagles) },
     { key: "par", label: "Pars", get: (r) => String(r.pars) },
     { key: "gir", label: "GIR", get: (r) => (r.gir_pct == null ? "—" : `${r.gir_pct}%`) },
   ];
   const NAME_W = 150;
-  const CELL_W = 50;
+  const CELL_W = 52;
 
   return (
     <div style={{ overflowX: "auto", margin: "0 -24px", padding: "2px 24px 4px" }}>
       <div style={{ minWidth: NAME_W + cols.length * CELL_W, display: "flex", flexDirection: "column", gap: 8 }}>
         {/* header */}
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 0, padding: "0 4px" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", padding: "0 6px" }}>
           <span style={{ width: NAME_W, flex: "none" }} />
           {cols.map((c) => (
             <span key={c.key} style={{ width: CELL_W, flex: "none", textAlign: "center", font: "500 10px var(--sans)", letterSpacing: "0.03em", textTransform: "uppercase", color: "var(--faint)" }}>{c.label}</span>
@@ -329,27 +319,27 @@ function Leaderboard({ board, meId }: { board: LeaderboardRow[]; meId?: string }
         {rows.map((r) => {
           const me = r.user_id === meId;
           const sub = personSub(r.first_name, r.last_name);
+          const roundsLabel = `${r.rounds} ${r.rounds === 1 ? "round" : "rounds"}`;
           return (
             <div
               key={r.user_id}
               className="card"
               style={{
-                display: "flex", alignItems: "center", padding: "10px 4px",
-                background: me ? "var(--green-900)" : "var(--surface)",
-                border: me ? "1.5px solid var(--green-900)" : "1px solid var(--line)",
+                display: "flex", alignItems: "center", padding: "10px 6px",
+                background: "var(--surface)",
+                border: me ? "2px solid var(--green-900)" : "1px solid var(--line)",
               }}
             >
-              <div style={{ width: NAME_W, flex: "none", display: "flex", alignItems: "center", gap: 10, paddingLeft: 8, minWidth: 0 }}>
-                <Avatar initials={r.initials} me={me} size={32} />
-                <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
-                  <span style={{ font: "600 14px var(--sans)", color: me ? "var(--sand)" : "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {r.display_name}{me ? " · You" : ""}
-                  </span>
-                  {sub && <span style={{ font: "400 11px var(--sans)", color: me ? "#9fb39a" : "var(--faint)" }}>{sub}</span>}
-                </div>
+              <div style={{ width: NAME_W, flex: "none", display: "flex", flexDirection: "column", paddingLeft: 6, minWidth: 0 }}>
+                <span style={{ font: "600 14px var(--sans)", color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {r.display_name}{me ? " · You" : ""}
+                </span>
+                <span style={{ font: "400 11px var(--sans)", color: "var(--faint)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {sub ? `${sub} · ${roundsLabel}` : roundsLabel}
+                </span>
               </div>
               {cols.map((c) => (
-                <span key={c.key} className="tnum" style={{ width: CELL_W, flex: "none", textAlign: "center", font: "600 15px var(--sans)", color: me ? (c.accent ? "var(--gold)" : "var(--sand)") : c.accent ? "var(--brass)" : "var(--ink)" }}>
+                <span key={c.key} className="tnum" style={{ width: CELL_W, flex: "none", textAlign: "center", font: "600 15px var(--sans)", color: c.accent ? "var(--brass)" : "var(--ink)" }}>
                   {c.get(r)}
                 </span>
               ))}
