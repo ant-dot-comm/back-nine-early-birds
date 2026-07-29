@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
-  listPlayers, addPlayer, addMemberPlayer, listMembers, createRound, listRecentRounds,
+  listPlayers, addPlayer, addMemberPlayer, listMembers, createRound, listRecentRounds, listTournaments,
 } from "../lib/db";
 import type { RoundSummaryRow } from "../lib/db";
-import type { Player, Member, RoundMode } from "../lib/types";
+import type { Player, Member, RoundMode, Tournament } from "../lib/types";
 import { Avatar, TopBar, FullSpinner, ErrorNote } from "../components/ui";
 import AddPlayerModal from "../components/AddPlayerModal";
 import { formatRoundDate, todayYMD } from "../lib/date";
@@ -14,10 +14,13 @@ import { SIDE_GAMES } from "../lib/sidegames";
 
 export default function NewRound() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { session } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [priorRounds, setPriorRounds] = useState<RoundSummaryRow[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [tournamentId, setTournamentId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [mode, setMode] = useState<RoundMode>("back9");
   const [compareId, setCompareId] = useState<string | null>(null);
@@ -29,17 +32,33 @@ export default function NewRound() {
   const date = todayYMD();
 
   useEffect(() => {
-    Promise.all([listPlayers(), listMembers(), listRecentRounds(10)])
-      .then(([ps, ms, rr]) => {
+    Promise.all([listPlayers(), listMembers(), listRecentRounds(10), listTournaments()])
+      .then(([ps, ms, rr, ts]) => {
         setPlayers(ps);
         setMembers(ms);
         setPriorRounds(rr);
+        setTournaments(ts);
         const self = ps.find((x) => x.is_self);
         setSelectedIds(self ? [self.id] : []);
+        const preset = searchParams.get("t");
+        const t = preset && ts.find((x) => x.id === preset && x.am_in && x.status === "active");
+        if (t) { setTournamentId(t.id); setMode(t.mode); }
       })
       .catch(() => setError("Couldn't load players."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [searchParams]);
+
+  // Active tournaments the user still owes rounds to.
+  const eligibleTournaments = tournaments.filter(
+    (t) => t.am_in && t.status === "active" && t.my_rounds_done < t.rounds_required
+  );
+  const selectedTournament = tournaments.find((t) => t.id === tournamentId) ?? null;
+
+  function pickTournament(id: string | null) {
+    setTournamentId(id);
+    const t = id ? tournaments.find((x) => x.id === id) : null;
+    if (t) setMode(t.mode); // format is fixed by the tournament
+  }
 
   const selectedPlayers = useMemo(
     () =>
@@ -102,7 +121,7 @@ export default function NewRound() {
     setError(null);
     try {
       const games = selectedIds.length >= 2 ? [...sideGames] : [];
-      const id = await createRound(date, selectedIds, mode, compareId, games);
+      const id = await createRound(date, selectedIds, mode, compareId, games, tournamentId);
       navigate(`/rounds/${id}/score`, { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start the round.");
@@ -119,21 +138,49 @@ export default function NewRound() {
         <>
           <div className="scroll">
             <div className="pad" style={{ display: "flex", flexDirection: "column", gap: 22, paddingTop: 8 }}>
+              {/* Tournament */}
+              {eligibleTournaments.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span className="eyebrow">Tournament</span>
+                    <span style={{ font: "400 13px var(--sans)", color: "var(--faint)" }}>Count this round toward an event you're in.</span>
+                  </div>
+                  <div style={{ position: "relative" }}>
+                    <select
+                      value={tournamentId ?? ""}
+                      onChange={(e) => pickTournament(e.target.value || null)}
+                      className="input"
+                      style={{ appearance: "none", WebkitAppearance: "none", paddingRight: 40, cursor: "pointer", font: "500 16px var(--sans)" }}
+                    >
+                      <option value="">Not a tournament round</option>
+                      {eligibleTournaments.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} · {modeLabel(t.mode)} · {t.my_rounds_done}/{t.rounds_required} done
+                        </option>
+                      ))}
+                    </select>
+                    <span style={{ position: "absolute", right: 18, top: "50%", transform: "translateY(-70%) rotate(45deg)", width: 9, height: 9, borderRight: "2px solid var(--muted-2)", borderBottom: "2px solid var(--muted-2)", pointerEvents: "none" }} />
+                  </div>
+                </div>
+              )}
+
               {/* Format */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <span className="eyebrow">Format</span>
-                <div style={{ display: "flex", gap: 4, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 4 }}>
+                <div style={{ display: "flex", gap: 4, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 4, opacity: selectedTournament ? 0.6 : 1 }}>
                   {(["back9", "full18"] as RoundMode[]).map((m) => {
                     const on = mode === m;
                     return (
-                      <button key={m} onClick={() => setMode(m)} style={{ flex: 1, height: 44, borderRadius: 11, border: "none", cursor: "pointer", font: "600 15px var(--sans)", background: on ? "var(--green-900)" : "transparent", color: on ? "var(--sand)" : "var(--muted)" }}>
+                      <button key={m} onClick={() => !selectedTournament && setMode(m)} disabled={!!selectedTournament} style={{ flex: 1, height: 44, borderRadius: 11, border: "none", cursor: selectedTournament ? "default" : "pointer", font: "600 15px var(--sans)", background: on ? "var(--green-900)" : "transparent", color: on ? "var(--sand)" : "var(--muted)" }}>
                         {modeLabel(m)}
                       </button>
                     );
                   })}
                 </div>
                 <span style={{ font: "400 13px var(--sans)", color: "var(--faint)" }}>
-                  {mode === "full18" ? "All 18 holes · par 72" : "Holes 10–18 · par 36"}
+                  {selectedTournament
+                    ? `Format is set by ${selectedTournament.name}.`
+                    : mode === "full18" ? "All 18 holes · par 72" : "Holes 10–18 · par 36"}
                 </span>
               </div>
 

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare, getMemberLeaderboard, listMyChallenges, respondChallenge, cancelChallenge, startChallengeRound } from "../lib/db";
+import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare, getMemberLeaderboard, listMyChallenges, respondChallenge, cancelChallenge, startChallengeRound, listTournaments } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
-import type { ScoreShare, LeaderboardRow, Challenge } from "../lib/types";
+import type { ScoreShare, LeaderboardRow, Challenge, Tournament } from "../lib/types";
+import { TournamentRow } from "./Tournaments";
 import { Avatar, FullSpinner, Logo } from "../components/ui";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AccountDrawer from "../components/AccountDrawer";
@@ -34,6 +35,7 @@ export default function Home() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
 
   function load() {
     getSeasonStats().then(setStats).catch(() => setStats(null));
@@ -42,9 +44,11 @@ export default function Home() {
     listPendingShares().then(setShares).catch(() => setShares([]));
     getMemberLeaderboard().then(setBoard).catch(() => setBoard([]));
     listMyChallenges().then(setChallenges).catch(() => setChallenges([]));
+    listTournaments().then(setTournaments).catch(() => setTournaments([]));
   }
 
   const myId = profile?.id;
+  const myActiveTournaments = tournaments.filter((t) => t.am_in && t.status === "active");
   const incoming = challenges.filter((c) => c.status === "pending" && c.defender === myId);
   const accepted = challenges.filter((c) => c.status === "accepted");
   const inRound = challenges.filter((c) => c.status === "in_round");
@@ -255,10 +259,31 @@ export default function Home() {
             </div>
           )}
 
+          {/* Tournaments */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+              <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>Tournaments</h2>
+              <Link to="/tournaments" style={{ font: "500 13px var(--sans)", color: "var(--brass)" }}>See all</Link>
+            </div>
+            {myActiveTournaments.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {myActiveTournaments.map((t) => <TournamentRow key={t.id} t={t} meId={myId} />)}
+              </div>
+            ) : (
+              <button onClick={() => navigate("/tournaments/new")} className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", cursor: "pointer", textAlign: "left", width: "100%", border: "1.5px dashed var(--line-2)", background: "transparent" }}>
+                <span style={{ fontSize: 22 }}>🏆</span>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ font: "600 15px var(--sans)", color: "var(--ink)" }}>Start a tournament</span>
+                  <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>Rally your crew, play at your own pace.</span>
+                </div>
+              </button>
+            )}
+          </div>
+
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>
-                {new Date().getFullYear()} season{stats && stats.roundsPlayed > 0 ? ` (${stats.roundsPlayed} ${stats.roundsPlayed === 1 ? "round" : "rounds"})` : ""}
+                Career{stats && stats.roundsPlayed > 0 ? ` (${stats.roundsPlayed} ${stats.roundsPlayed === 1 ? "round" : "rounds"})` : ""}
               </h2>
               <select
                 value={statView}

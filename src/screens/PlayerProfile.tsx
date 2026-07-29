@@ -10,7 +10,8 @@ import { personSub } from "../lib/course";
 function badgeEmoji(kind: string): string {
   if (kind.startsWith("rounds_")) return "⛳️";
   if (kind === "bogey_free") return "🎯";
-  if (kind === "won_duel") return "🏆";
+  if (kind === "tourney_winner") return "🏆";
+  if (kind === "won_duel") return "🗡️";
   if (kind.startsWith("won_")) return "🥇";
   return "🎖️";
 }
@@ -40,6 +41,7 @@ export default function PlayerProfile() {
     { label: "Pars", value: String(p.pars) },
     { label: "GIR", value: p.gir_pct == null ? "—" : `${p.gir_pct}%` },
     { label: "Duels won", value: String(p.challenges_won), accent: true },
+    { label: "Tourneys won", value: String(p.tournaments_won), accent: true },
   ];
 
   return (
@@ -61,7 +63,7 @@ export default function PlayerProfile() {
           </div>
 
           <div>
-            <span className="eyebrow">This season</span>
+            <span className="eyebrow">Career</span>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 8 }}>
               {tiles.map((t) => (
                 <div key={t.label} className="card" style={{ padding: "12px 10px", display: "flex", flexDirection: "column", gap: 4 }}>

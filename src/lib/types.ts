@@ -112,6 +112,44 @@ export interface PublicProfile {
   challenges_won: number;
   challenges_played: number;
   held_name: string | null;
+  tournaments_won: number;
+  tournaments_played: number;
+}
+
+export type TournamentScoring = "total_strokes" | "average" | "single_best";
+export type TournamentStatus = "active" | "completed" | "canceled";
+
+/** A tournament row as returned by list_tournaments() (enriched for the viewer). */
+export interface Tournament {
+  id: string;
+  name: string;
+  description: string | null;
+  created_by: string;
+  mode: RoundMode;
+  rounds_required: number;
+  scoring: TournamentScoring;
+  status: TournamentStatus;
+  created_at: string;
+  settled_at: string | null;
+  participant_count: number;
+  am_in: boolean;
+  my_rounds_done: number;
+  winner: string | null;
+  winner_display: string | null;
+}
+
+/** One participant's standing in a tournament. */
+export interface TournamentStanding {
+  user_id: string;
+  display_name: string;
+  initials: string;
+  first_name: string | null;
+  last_name: string | null;
+  rounds_done: number;
+  counted_score: number | null;
+  best_single: number | null;
+  total_pars: number;
+  is_complete: boolean;
 }
 
 export type RoundMode = "back9" | "full18";

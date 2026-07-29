@@ -12,6 +12,9 @@ import Stats from "./screens/Stats";
 import Account from "./screens/Account";
 import RareNames from "./screens/RareNames";
 import PlayerProfile from "./screens/PlayerProfile";
+import Tournaments from "./screens/Tournaments";
+import CreateTournament from "./screens/CreateTournament";
+import TournamentDetail from "./screens/TournamentDetail";
 import JoinInvite from "./screens/JoinInvite";
 
 export default function App() {
@@ -76,6 +79,9 @@ export default function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/rare" element={<RareNames />} />
         <Route path="/player/:id" element={<PlayerProfile />} />
+        <Route path="/tournaments" element={<Tournaments />} />
+        <Route path="/tournaments/new" element={<CreateTournament />} />
+        <Route path="/tournaments/:id" element={<TournamentDetail />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );

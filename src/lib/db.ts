@@ -15,6 +15,9 @@ import type {
   Challenge,
   Badge,
   PublicProfile,
+  Tournament,
+  TournamentStanding,
+  TournamentScoring,
 } from "./types";
 import { formatRoundDate } from "./date";
 
@@ -129,6 +132,62 @@ export async function getPublicBadges(userId: string): Promise<Badge[]> {
   return (data as Badge[]) ?? [];
 }
 
+// ---- tournaments ------------------------------------------------------------
+
+export async function listTournaments(): Promise<Tournament[]> {
+  const { data, error } = await supabase.rpc("list_tournaments");
+  if (error) throw error;
+  return (data as Tournament[]) ?? [];
+}
+
+export async function getTournamentStandings(tournamentId: string): Promise<TournamentStanding[]> {
+  const { data, error } = await supabase.rpc("tournament_standings", { p_tournament: tournamentId });
+  if (error) throw error;
+  return (data as TournamentStanding[]) ?? [];
+}
+
+export interface CreateTournamentInput {
+  name: string;
+  description: string | null;
+  mode: RoundMode;
+  roundsRequired: number;
+  scoring: TournamentScoring;
+  playerIds: string[];
+}
+
+export async function createTournament(t: CreateTournamentInput): Promise<string> {
+  const { data, error } = await supabase.rpc("create_tournament", {
+    p_name: t.name,
+    p_description: t.description,
+    p_mode: t.mode,
+    p_rounds_required: t.roundsRequired,
+    p_scoring: t.scoring,
+    p_players: t.playerIds,
+  });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function addTournamentPlayer(tournamentId: string, userId: string): Promise<void> {
+  const { error } = await supabase.rpc("add_tournament_player", { p_tournament: tournamentId, p_user: userId });
+  if (error) throw error;
+}
+
+export async function removeTournamentPlayer(tournamentId: string, userId: string): Promise<void> {
+  const { error } = await supabase.rpc("remove_tournament_player", { p_tournament: tournamentId, p_user: userId });
+  if (error) throw error;
+}
+
+export async function leaveTournament(tournamentId: string): Promise<void> {
+  const { error } = await supabase.rpc("leave_tournament", { p_tournament: tournamentId });
+  if (error) throw error;
+}
+
+export async function cancelTournament(tournamentId: string): Promise<void> {
+  const { error } = await supabase.rpc("cancel_tournament", { p_tournament: tournamentId });
+  if (error) throw error;
+}
+
 // ---- players ----------------------------------------------------------------
 
 export async function listPlayers(): Promise<Player[]> {
@@ -201,11 +260,12 @@ export async function createRound(
   playerIds: string[],
   mode: RoundMode,
   compareRoundId: string | null,
-  sideGames: string[] = []
+  sideGames: string[] = [],
+  tournamentId: string | null = null
 ): Promise<string> {
   const { data: round, error } = await supabase
     .from("rounds")
-    .insert({ played_on: playedOn, mode, compare_round_id: compareRoundId, side_games: sideGames })
+    .insert({ played_on: playedOn, mode, compare_round_id: compareRoundId, side_games: sideGames, tournament_id: tournamentId })
     .select()
     .single();
   if (error) throw error;
@@ -587,9 +647,8 @@ export interface SeasonStats {
   girPct: number | null;
 }
 
-/** Season card for the signed-in user: cumulative counts + separate 9/18 averages. */
+/** Career card for the signed-in user: cumulative counts + separate 9/18 averages. */
 export async function getSeasonStats(): Promise<SeasonStats> {
-  const yearStart = `${new Date().getFullYear()}-01-01`;
   const empty: SeasonStats = {
     roundsPlayed: 0,
     avg9: null,
@@ -610,8 +669,7 @@ export async function getSeasonStats(): Promise<SeasonStats> {
   const { data: rounds } = await supabase
     .from("rounds")
     .select("id, mode")
-    .eq("is_final", true)
-    .gte("played_on", yearStart);
+    .eq("is_final", true);
 
   const roundMode = new Map<string, RoundMode>();
   (rounds ?? []).forEach((r) => roundMode.set(r.id, r.mode as RoundMode));
