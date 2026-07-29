@@ -10,6 +10,7 @@ import { Avatar, TopBar, FullSpinner, ErrorNote } from "../components/ui";
 import AddPlayerModal from "../components/AddPlayerModal";
 import { formatRoundDate, todayYMD } from "../lib/date";
 import { modeLabel, toParLabel, personSub } from "../lib/course";
+import { SIDE_GAMES } from "../lib/sidegames";
 
 export default function NewRound() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function NewRound() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [mode, setMode] = useState<RoundMode>("back9");
   const [compareId, setCompareId] = useState<string | null>(null);
+  const [sideGames, setSideGames] = useState<Set<string>>(new Set());
   const [showAdd, setShowAdd] = useState(false);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
@@ -86,12 +88,21 @@ export default function NewRound() {
     }
   }
 
+  function toggleGame(key: string) {
+    setSideGames((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
   async function start() {
     if (selectedIds.length === 0) return setError("Pick at least one player.");
     setStarting(true);
     setError(null);
     try {
-      const id = await createRound(date, selectedIds, mode, compareId);
+      const games = selectedIds.length >= 2 ? [...sideGames] : [];
+      const id = await createRound(date, selectedIds, mode, compareId, games);
       navigate(`/rounds/${id}/score`, { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start the round.");
@@ -176,6 +187,37 @@ export default function NewRound() {
                   </button>
                 </div>
               </div>
+
+              {/* Side games (2+ players) */}
+              {selectedIds.length >= 2 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span className="eyebrow">Side games</span>
+                    <span style={{ font: "400 13px var(--sans)", color: "var(--faint)" }}>Optional bragging-rights contests, scored across the group.</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {SIDE_GAMES.map((g) => {
+                      const on = sideGames.has(g.key);
+                      return (
+                        <button
+                          key={g.key}
+                          onClick={() => toggleGame(g.key)}
+                          className="card"
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", cursor: "pointer", textAlign: "left", width: "100%", background: on ? "#f0e8d6" : "var(--surface)", border: on ? "1.5px solid var(--green-900)" : "1px solid var(--line)" }}
+                        >
+                          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                            <span style={{ font: "600 15px var(--sans)", color: "var(--ink)" }}>{g.label}</span>
+                            <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>{g.desc}</span>
+                          </div>
+                          <span style={{ width: 26, height: 26, borderRadius: "50%", flex: "none", border: on ? "none" : "2px solid #c9b797", background: on ? "var(--green-900)" : "#fffdf7", display: "grid", placeItems: "center" }}>
+                            {on && <span style={{ width: 11, height: 6, borderLeft: "2px solid var(--sand)", borderBottom: "2px solid var(--sand)", transform: "rotate(-45deg)", marginTop: -2 }} />}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Compare */}
               {priorRounds.length > 0 && (

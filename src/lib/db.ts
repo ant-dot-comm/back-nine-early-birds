@@ -178,11 +178,12 @@ export async function createRound(
   playedOn: string,
   playerIds: string[],
   mode: RoundMode,
-  compareRoundId: string | null
+  compareRoundId: string | null,
+  sideGames: string[] = []
 ): Promise<string> {
   const { data: round, error } = await supabase
     .from("rounds")
-    .insert({ played_on: playedOn, mode, compare_round_id: compareRoundId })
+    .insert({ played_on: playedOn, mode, compare_round_id: compareRoundId, side_games: sideGames })
     .select()
     .single();
   if (error) throw error;

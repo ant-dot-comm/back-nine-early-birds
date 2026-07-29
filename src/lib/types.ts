@@ -94,6 +94,7 @@ export interface Round {
   is_final: boolean;
   mode: RoundMode;
   compare_round_id: string | null;
+  side_games: string[];
   created_at: string;
 }
 

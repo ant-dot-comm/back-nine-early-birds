@@ -11,7 +11,8 @@ import { formatLongDate } from "../lib/date";
 import { useAuth } from "../context/AuthContext";
 import ShareInviteModal from "../components/ShareInviteModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPaperPlane, faCheck } from "@fortawesome/free-solid-svg-icons";
+import { faPaperPlane, faCheck, faTrophy } from "@fortawesome/free-solid-svg-icons";
+import { computeSideGame, type SideGame } from "../lib/sidegames";
 
 interface Standing {
   player: Player;
@@ -31,6 +32,7 @@ export default function Summary() {
   const [course, setCourse] = useState("Mission Trails");
   const [mode, setMode] = useState<RoundMode>("back9");
   const [compare, setCompare] = useState<RoundDetail["compare"]>(null);
+  const [sideGames, setSideGames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [gridPlayer, setGridPlayer] = useState<string | null>(null);
   const [shareFor, setShareFor] = useState<Player | null>(null);
@@ -84,6 +86,7 @@ export default function Summary() {
         setCourse(d.round.course);
         setMode(d.round.mode);
         setCompare(d.compare);
+        setSideGames(d.round.side_games ?? []);
         const self = d.players.find((p) => p.is_self);
         setGridPlayer(self?.id ?? d.players[0]?.id ?? null);
         setLoading(false);
@@ -188,6 +191,30 @@ export default function Summary() {
               </span>
             )}
           </div>
+
+          {/* side games */}
+          {sideGames.length > 0 && players.length > 1 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <span className="eyebrow">Side games</span>
+              <div className="card" style={{ padding: "6px 4px", display: "flex", flexDirection: "column" }}>
+                {sideGames.map((g, i) => {
+                  const scoresByPlayer: Record<string, HoleScore[]> = {};
+                  players.forEach((p) => { scoresByPlayer[p.id] = scores.filter((s) => s.player_id === p.id); });
+                  const res = computeSideGame(g as SideGame, players, scoresByPlayer);
+                  return (
+                    <div key={g} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderTop: i === 0 ? "none" : "1px solid var(--line)" }}>
+                      <FontAwesomeIcon icon={faTrophy} style={{ color: "var(--brass)", fontSize: 14, width: 18 }} />
+                      <span style={{ flex: 1, font: "600 14px var(--sans)", color: "var(--ink)" }}>{res.label}</span>
+                      <span style={{ font: "600 14px var(--sans)", color: "var(--green-900)" }}>
+                        {res.winners.map((w) => w.name.split(/\s+/)[0]).join(", ")}
+                      </span>
+                      <span className="tnum" style={{ font: "600 13px var(--sans)", color: "var(--brass)", minWidth: 42, textAlign: "right" }}>{res.display}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* hole-by-hole */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
