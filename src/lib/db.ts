@@ -11,6 +11,8 @@ import type {
   LeaderboardRow,
   ScoreShare,
   DisplayNameType,
+  RareName,
+  Challenge,
 } from "./types";
 import { formatRoundDate } from "./date";
 
@@ -63,6 +65,46 @@ export async function getUnlockedSecrets(): Promise<string[]> {
   const { data, error } = await supabase.rpc("unlocked_secret_names");
   if (error) throw error;
   return (data as string[]) ?? [];
+}
+
+// ---- rare-name holdings & challenges ----------------------------------------
+
+/** Every rare name and its current holder (null = unclaimed). */
+export async function getSecretRoster(): Promise<RareName[]> {
+  const { data, error } = await supabase.rpc("secret_roster");
+  if (error) throw error;
+  return (data as RareName[]) ?? [];
+}
+
+/** Claim an unclaimed rare name you've unlocked (sets it as your display name). */
+export async function claimSecret(
+  userId: string,
+  name: string,
+  first: string,
+  last: string
+): Promise<void> {
+  await saveProfile(userId, { firstName: first, lastName: last, displayName: name, type: "secret", secret: name });
+}
+
+export async function createChallenge(defender: string, name: string): Promise<void> {
+  const { error } = await supabase.rpc("create_challenge", { p_defender: defender, p_secret: name });
+  if (error) throw error;
+}
+
+export async function respondChallenge(id: string, accept: boolean): Promise<void> {
+  const { error } = await supabase.rpc("respond_challenge", { p_id: id, p_accept: accept });
+  if (error) throw error;
+}
+
+export async function cancelChallenge(id: string): Promise<void> {
+  const { error } = await supabase.rpc("cancel_challenge", { p_id: id });
+  if (error) throw error;
+}
+
+export async function listMyChallenges(): Promise<Challenge[]> {
+  const { data, error } = await supabase.rpc("list_my_challenges");
+  if (error) throw error;
+  return (data as Challenge[]) ?? [];
 }
 
 // ---- players ----------------------------------------------------------------

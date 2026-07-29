@@ -8,6 +8,8 @@ export interface Profile {
   last_name: string | null;
   display_name_type: DisplayNameType;
   secret_name: string | null;
+  challenges_won: number;
+  challenges_played: number;
   created_at: string;
 }
 
@@ -56,6 +58,29 @@ export interface ScoreShare {
   mode: RoundMode;
   scores: { hole: number; par: number; strokes: number; gir: boolean }[];
   status: "pending" | "accepted" | "dismissed";
+  created_at: string;
+}
+
+export interface RareName {
+  name: string;
+  holder: string | null;
+  holder_display: string | null;
+  holder_first: string | null;
+  holder_last: string | null;
+  holder_initials: string | null;
+}
+
+export interface Challenge {
+  id: string;
+  challenger: string;
+  defender: string;
+  secret_name: string;
+  status: "pending" | "accepted" | "declined" | "settled" | "canceled";
+  challenger_display: string;
+  defender_display: string;
+  challenger_score: number | null;
+  defender_score: number | null;
+  winner: string | null;
   created_at: string;
 }
 

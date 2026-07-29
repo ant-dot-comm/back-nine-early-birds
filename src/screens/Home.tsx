@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare, getMemberLeaderboard } from "../lib/db";
+import { listRecentRounds, listDraftRounds, getSeasonStats, deleteRound, listPendingShares, acceptShare, dismissShare, getMemberLeaderboard, listMyChallenges, respondChallenge, cancelChallenge } from "../lib/db";
 import type { RoundSummaryRow, SeasonStats } from "../lib/db";
-import type { ScoreShare, LeaderboardRow } from "../lib/types";
+import type { ScoreShare, LeaderboardRow, Challenge } from "../lib/types";
 import { Avatar, FullSpinner, Logo } from "../components/ui";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,6 +27,8 @@ export default function Home() {
   const [shares, setShares] = useState<ScoreShare[]>([]);
   const [board, setBoard] = useState<LeaderboardRow[]>([]);
   const [statView, setStatView] = useState<"you" | "everyone">("you");
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [busyChal, setBusyChal] = useState<string | null>(null);
   const [busyShare, setBusyShare] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -37,6 +39,20 @@ export default function Home() {
     listDraftRounds().then(setDrafts).catch(() => setDrafts([]));
     listPendingShares().then(setShares).catch(() => setShares([]));
     getMemberLeaderboard().then(setBoard).catch(() => setBoard([]));
+    listMyChallenges().then(setChallenges).catch(() => setChallenges([]));
+  }
+
+  const myId = profile?.id;
+  const incoming = challenges.filter((c) => c.status === "pending" && c.defender === myId);
+  const active = challenges.filter((c) => c.status === "accepted");
+
+  async function respondChal(id: string, accept: boolean) {
+    setBusyChal(id);
+    try { await respondChallenge(id, accept); load(); } finally { setBusyChal(null); }
+  }
+  async function cancelChal(id: string) {
+    setBusyChal(id);
+    try { await cancelChallenge(id); load(); } finally { setBusyChal(null); }
   }
 
   async function accept(s: ScoreShare) {
@@ -129,6 +145,45 @@ export default function Home() {
                         </button>
                         <button className="btn ghost sm" style={{ height: 46 }} onClick={() => dismiss(s)} disabled={busyShare === s.id}>Dismiss</button>
                       </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Rare-name challenges */}
+          {(incoming.length > 0 || active.length > 0) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <h2 className="h-serif" style={{ font: "600 19px var(--serif)" }}>Rare-name challenges</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {incoming.map((c) => (
+                  <div key={c.id} className="card" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12, border: "1.5px solid var(--brass)" }}>
+                    <div style={{ font: "500 14px/1.5 var(--sans)", color: "var(--ink)" }}>
+                      <b>{c.challenger_display}</b> is challenging you for <b style={{ color: "var(--brass)" }}>{c.secret_name}</b>. Beat them in a round together to keep it.
+                    </div>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button className="btn sm" style={{ flex: 1, height: 44 }} onClick={() => respondChal(c.id, true)} disabled={busyChal === c.id}>
+                        {busyChal === c.id ? <span className="spin on-dark" /> : "Accept"}
+                      </button>
+                      <button className="btn ghost sm" style={{ height: 44 }} onClick={() => respondChal(c.id, false)} disabled={busyChal === c.id}>Decline</button>
+                    </div>
+                  </div>
+                ))}
+                {active.map((c) => {
+                  const iChallenged = c.challenger === myId;
+                  const other = iChallenged ? c.defender_display : c.challenger_display;
+                  return (
+                    <div key={c.id} className="card" style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                        <span style={{ font: "600 14px var(--sans)", color: "var(--ink)" }}>
+                          {iChallenged ? `You vs ${other}` : `${other} vs you`} · <span style={{ color: "var(--brass)" }}>{c.secret_name}</span>
+                        </span>
+                        <span style={{ font: "400 12px var(--sans)", color: "var(--faint)" }}>Log a round together — low score wins the name.</span>
+                      </div>
+                      <button onClick={() => cancelChal(c.id)} disabled={busyChal === c.id} style={{ border: "none", background: "transparent", font: "500 12px var(--sans)", color: "var(--muted-2)", cursor: "pointer" }}>
+                        {busyChal === c.id ? "…" : "Cancel"}
+                      </button>
                     </div>
                   );
                 })}

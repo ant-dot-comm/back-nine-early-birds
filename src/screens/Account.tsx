@@ -130,6 +130,10 @@ export default function Account() {
             </button>
           </div>
 
+          <button className="btn ghost" onClick={() => navigate("/rare")}>
+            <FontAwesomeIcon icon={faStar} /> Rare names &amp; challenges
+          </button>
+
           <button
             className="btn ghost"
             style={{ borderColor: "#b6603f", color: "#9a3b26" }}

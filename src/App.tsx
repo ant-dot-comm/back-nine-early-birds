@@ -10,6 +10,7 @@ import ScoreEntry from "./screens/ScoreEntry";
 import Summary from "./screens/Summary";
 import Stats from "./screens/Stats";
 import Account from "./screens/Account";
+import RareNames from "./screens/RareNames";
 import JoinInvite from "./screens/JoinInvite";
 
 export default function App() {
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="/rounds/:id" element={<Summary />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/rare" element={<RareNames />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
