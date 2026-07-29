@@ -280,7 +280,7 @@ export default function Summary() {
       {confirmDel && (
         <ConfirmDialog
           title="Delete this round?"
-          body="This permanently removes the round and every score in it. This can't be undone."
+          body="This permanently removes the round, every score in it, and any badges or awards earned from it. This can't be undone."
           busy={deleting}
           onCancel={() => setConfirmDel(false)}
           onConfirm={doDelete}
