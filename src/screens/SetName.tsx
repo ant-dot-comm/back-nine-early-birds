@@ -3,8 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { saveProfile, claimInvite } from "../lib/db";
 import { ErrorNote } from "../components/ui";
+import { PaintingWindow } from "../components/paint";
 import GolfNameGenerator, { type NameSelection } from "../components/GolfNameGenerator";
 import { getPendingInvite, clearPendingInvite } from "../lib/invite";
+import { PAINT, C } from "../lib/paint";
 
 export default function SetName() {
   const { session, refreshProfile } = useAuth();
@@ -21,32 +23,15 @@ export default function SetName() {
   const onNameChange = useCallback((s: NameSelection) => setSel(s), []);
 
   async function submit() {
-    if (first.trim().length < 1 || last.trim().length < 1) {
-      return setError("Please enter your first and last name.");
-    }
+    if (first.trim().length < 1 || last.trim().length < 1) return setError("Please enter your first and last name.");
     const name = sel?.name?.trim();
     if (!name) return setError("Pick or enter a display name.");
     if (!session) return;
-    setBusy(true);
-    setError(null);
+    setBusy(true); setError(null);
     try {
-      await saveProfile(session.user.id, {
-        firstName: first,
-        lastName: last,
-        displayName: name,
-        type: sel!.type,
-        parts: sel!.parts,
-        secret: sel!.secret,
-      });
+      await saveProfile(session.user.id, { firstName: first, lastName: last, displayName: name, type: sel!.type, parts: sel!.parts, secret: sel!.secret });
       const inv = getPendingInvite();
-      if (inv) {
-        try {
-          await claimInvite(inv.token);
-        } catch {
-          /* already claimed or invalid — ignore */
-        }
-        clearPendingInvite();
-      }
+      if (inv) { try { await claimInvite(inv.token); } catch { /* ignore */ } clearPendingInvite(); }
       await refreshProfile();
       navigate("/", { replace: true });
     } catch (e) {
@@ -58,13 +43,18 @@ export default function SetName() {
   return (
     <div className="screen fade">
       <div className="scroll">
-        <div className="pad safe-top" style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 36 }}>
+        <div className="pad safe-top" style={{ display: "flex", flexDirection: "column", gap: 18, paddingTop: 20 }}>
           <div>
-            <h1 className="h-serif" style={{ font: "600 30px/1.15 var(--serif)" }}>Welcome to the group</h1>
-            <p style={{ margin: "6px 0 0", font: "400 15px/1.5 var(--sans)", color: "var(--muted)" }}>
-              Build your own golf alter ego or roll the dice for a random one. Every reroll here has a tiny chance of uncovering an <b style={{ color: "var(--brass)" }}>ultra-rare secret name</b> — only discoverable during signup, so choose carefully.
-            </p>
+            <span className="eyebrow">First login · step 2 of 2</span>
+            <h1 className="display" style={{ marginTop: 3, fontSize: 29 }}>Nobody plays<br />under their own name.</h1>
           </div>
+
+          <PaintingWindow src={PAINT.teeShot} height={150} shape="lozenge" elevation="e3">
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 22px" }}>
+              <span className="hand" style={{ font: "400 26px/1 var(--hand)", color: C.cream, textShadow: "0 2px 10px rgba(16,24,10,.5)" }}>roll for your alter ego —</span>
+              <span className="hand" style={{ font: "400 22px/1 var(--hand)", color: C.sand }}>1 in 50 is one-of-one</span>
+            </div>
+          </PaintingWindow>
 
           <div style={{ display: "flex", gap: 10 }}>
             <div className="field" style={{ flex: 1 }}>
@@ -77,17 +67,14 @@ export default function SetName() {
             </div>
           </div>
 
-          <div className="field">
-            <label className="label">Display name</label>
-            <GolfNameGenerator allowSecret previewSecret={params.get("rare") === "1"} onChange={onNameChange} />
-          </div>
+          <GolfNameGenerator allowSecret previewSecret={params.get("rare") === "1"} onChange={onNameChange} />
 
           {error && <ErrorNote>{error}</ErrorNote>}
-          <button className="btn" onClick={submit} disabled={busy} style={{ marginTop: 4 }}>
-            {busy ? <span className="spin on-dark" /> : "Continue"}
+          <button className="btn" onClick={submit} disabled={busy} style={{ marginTop: 2 }}>
+            {busy ? <span className="spin on-dark" /> : "Lock it in"}
           </button>
-          <p style={{ margin: "0 0 8px", font: "400 12px/1.5 var(--sans)", color: "var(--faint)", textAlign: "center" }}>
-            You can change your display name later — but secret rolls are only available here.
+          <p style={{ margin: "0 0 8px", font: "400 12px/1.5 var(--sans)", color: C.tx3, textAlign: "center" }}>
+            You can change your display name later — but secret rolls only happen here.
           </p>
         </div>
       </div>

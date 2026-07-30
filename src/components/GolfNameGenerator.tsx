@@ -6,6 +6,7 @@ import {
 } from "../lib/golfNames";
 import { rollSecretName } from "../lib/db";
 import type { DisplayNameType } from "../lib/types";
+import { C, ELEV } from "../lib/paint";
 
 export interface NameSelection {
   name: string;
@@ -24,7 +25,6 @@ export default function GolfNameGenerator({
 }: {
   allowSecret?: boolean;
   unlockedSecrets?: string[];
-  /** Dev/testing: start in the ultra-rare reveal state (no real grant). */
   previewSecret?: boolean;
   onChange: (sel: NameSelection) => void;
 }) {
@@ -37,7 +37,6 @@ export default function GolfNameGenerator({
   const [rolling, setRolling] = useState(false);
   const emitted = useRef(false);
 
-  // Emit the initial name once.
   useEffect(() => {
     if (!emitted.current) {
       emitted.current = true;
@@ -58,15 +57,8 @@ export default function GolfNameGenerator({
       setRolling(true);
       try {
         const hit = await rollSecretName();
-        if (hit) {
-          setSecret(hit);
-          onChange({ name: hit, type: "secret", secret: hit });
-          setRolling(false);
-          return;
-        }
-      } catch {
-        /* fall through to a standard reroll */
-      }
+        if (hit) { setSecret(hit); onChange({ name: hit, type: "secret", secret: hit }); setRolling(false); return; }
+      } catch { /* fall through */ }
       setRolling(false);
     }
     const p = randomGolfName();
@@ -79,32 +71,20 @@ export default function GolfNameGenerator({
     setParts(p);
     emitGenerated(p);
   }
-
-  function pickUnlocked(name: string) {
-    setSecret(name);
-    onChange({ name, type: "secret", secret: name });
-  }
+  function pickUnlocked(name: string) { setSecret(name); onChange({ name, type: "secret", secret: name }); }
 
   const showManual = manual || rerolls >= REROLLS_BEFORE_MANUAL;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {/* tab toggle */}
-      <div style={{ display: "flex", gap: 4, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: 4 }}>
+      <div style={{ display: "flex", gap: 4, background: C.shade2, boxShadow: ELEV.e0, borderRadius: 12, padding: 4 }}>
         {(["golf", "custom"] as const).map((t) => {
           const on = tab === t;
           return (
-            <button
-              key={t}
-              type="button"
-              onClick={() => {
-                setTab(t);
-                if (t === "golf") emitGenerated(parts);
-                else onChange({ name: custom, type: "custom" });
-              }}
-              style={{ flex: 1, height: 40, borderRadius: 9, border: "none", cursor: "pointer", font: "600 14px var(--sans)", background: on ? "var(--green-900)" : "transparent", color: on ? "var(--sand)" : "var(--muted)" }}
-            >
-              {t === "golf" ? "Golf name" : "Type my own"}
+            <button key={t} type="button"
+              onClick={() => { setTab(t); if (t === "golf") emitGenerated(parts); else onChange({ name: custom, type: "custom" }); }}
+              style={{ flex: 1, height: 40, borderRadius: 9, border: "none", cursor: "pointer", font: "600 14px var(--sans)", background: on ? C.paper : "transparent", color: on ? C.ink : C.tx3 }}>
+              {t === "golf" ? "Roll a name" : "Type my own"}
             </button>
           );
         })}
@@ -112,42 +92,35 @@ export default function GolfNameGenerator({
 
       {tab === "golf" ? (
         <>
-          {/* preview */}
           {secret ? (
-            <div className="fade-pop" style={{ background: "linear-gradient(135deg, #e7c877, #cb9f39)", borderRadius: 16, padding: "18px 16px", textAlign: "center", display: "flex", flexDirection: "column", gap: 6, border: "2px solid #8a6620" }}>
-              <span style={{ font: "700 10px var(--sans)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--green-900)" }}>
-                <FontAwesomeIcon icon={faStar} /> Ultra-rare golf name
+            <div className="fade-pop surf-flag" style={{ borderRadius: 16, padding: "18px 16px", textAlign: "center", display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ font: "600 9px var(--sans)", letterSpacing: "0.16em", textTransform: "uppercase", color: C.cream }}>
+                <FontAwesomeIcon icon={faStar} /> One of one
               </span>
-              <span className="h-serif" style={{ font: "700 26px var(--serif)", color: "var(--green-900)" }}>{secret}</span>
-              <span style={{ font: "500 11px var(--sans)", color: "#5c4a1e" }}>Rerolling gives it up.</span>
+              <span className="hand" style={{ font: "400 40px/.9 var(--hand)", color: C.cream }}>{secret}</span>
+              <span style={{ font: "500 11px var(--sans)", color: "#F3D9C9" }}>Reroll and you hand it back.</span>
             </div>
           ) : (
-            <div className="card" style={{ padding: "18px 16px", textAlign: "center" }}>
-              <span className="h-serif" style={{ font: "600 24px/1.2 var(--serif)", color: "var(--green-900)" }}>{formatGolfName(parts)}</span>
+            <div className="surf-raised" style={{ borderRadius: 16, padding: "20px 16px", textAlign: "center" }}>
+              <span style={{ font: "600 26px/1.1 var(--sans)", color: C.tx }}>{formatGolfName(parts)}</span>
             </div>
           )}
 
-          <button
-            type="button"
-            className="btn"
-            onClick={reroll}
-            disabled={rolling}
-            style={{ height: 50 }}
-          >
-            {rolling ? <span className="spin on-dark" /> : <><FontAwesomeIcon icon={faDice} /> {secret ? "Reroll (give it up)" : "Reroll"}</>}
+          <button type="button" className={secret ? "btn ghost" : "btn"} onClick={reroll} disabled={rolling} style={{ height: 50 }}>
+            {rolling ? <span className={secret ? "spin" : "spin on-dark"} /> : <><FontAwesomeIcon icon={faDice} /> {secret ? "Reroll (give it up)" : "Reroll"}</>}
           </button>
 
           {!showManual && !secret && (
-            <button type="button" onClick={() => setManual(true)} style={{ border: "none", background: "transparent", font: "500 13px var(--sans)", color: "var(--brass)", cursor: "pointer", alignSelf: "center" }}>
-              Or choose each part
+            <button type="button" onClick={() => setManual(true)} style={{ border: "none", background: "transparent", font: "600 13px var(--sans)", color: C.sand, cursor: "pointer", alignSelf: "center" }}>
+              Or build it yourself
             </button>
           )}
 
           {showManual && !secret && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <PartSelect label="Prefix" value={parts.adjective} options={ADJECTIVES} onChange={(v) => setPart("adjective", v)} />
-              <PartSelect label="Golf term" value={parts.noun} options={NOUNS} onChange={(v) => setPart("noun", v)} />
-              <PartSelect label="Nickname" value={parts.nickname} options={NICKNAMES} onChange={(v) => setPart("nickname", v)} />
+              <PartSelect label="Term" value={parts.noun} options={NOUNS} onChange={(v) => setPart("noun", v)} />
+              <PartSelect label="Handle" value={parts.nickname} options={NICKNAMES} onChange={(v) => setPart("nickname", v)} />
             </div>
           )}
 
@@ -156,15 +129,7 @@ export default function GolfNameGenerator({
               <span className="eyebrow"><FontAwesomeIcon icon={faStar} /> Unlocked secret names</span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {unlockedSecrets.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => pickUnlocked(s)}
-                    className="chip"
-                    style={{ cursor: "pointer", border: secret === s ? "1.5px solid var(--green-900)" : "1px solid var(--chip-line)", background: secret === s ? "var(--green-900)" : "var(--chip-bg)", color: secret === s ? "var(--sand)" : "var(--label-gold)" }}
-                  >
-                    {s}
-                  </button>
+                  <button key={s} type="button" onClick={() => pickUnlocked(s)} className={`chip${secret === s ? " on" : ""}`} style={{ cursor: "pointer" }}>{s}</button>
                 ))}
               </div>
             </div>
@@ -173,17 +138,8 @@ export default function GolfNameGenerator({
       ) : (
         <div className="field">
           <label className="label">Display name</label>
-          <input
-            className="input"
-            autoFocus
-            value={custom}
-            placeholder="Type any name"
-            maxLength={40}
-            onChange={(e) => {
-              setCustom(e.target.value);
-              onChange({ name: e.target.value, type: "custom" });
-            }}
-          />
+          <input className="input" autoFocus value={custom} placeholder="Type any name" maxLength={40}
+            onChange={(e) => { setCustom(e.target.value); onChange({ name: e.target.value, type: "custom" }); }} />
         </div>
       )}
     </div>
@@ -193,12 +149,8 @@ export default function GolfNameGenerator({
 function PartSelect({ label, value, options, onChange }: { label: string; value: string; options: readonly string[]; onChange: (v: string) => void }) {
   return (
     <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ width: 78, flex: "none", font: "500 12px var(--sans)", color: "var(--faint)" }}>{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ flex: 1, height: 44, borderRadius: 12, border: "1.5px solid var(--line-2)", background: "var(--input-bg)", padding: "0 12px", font: "500 15px var(--sans)", color: "var(--ink)" }}
-      >
+      <span style={{ width: 64, flex: "none", font: "600 11px var(--sans)", letterSpacing: ".06em", textTransform: "uppercase", color: C.fescue }}>{label}</span>
+      <select className="input" value={value} onChange={(e) => onChange(e.target.value)} style={{ flex: 1 }}>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
     </label>

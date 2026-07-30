@@ -4,6 +4,20 @@ export const PARS: Record<number, number> = {
   10: 3, 11: 4, 12: 5, 13: 4, 14: 5, 15: 4, 16: 4, 17: 3, 18: 4,
 };
 
+// Mission Trails — per-hole yardage + a little colour for the scorecard focus card.
+export const YARDS: Record<number, number> = {
+  1: 505, 2: 388, 3: 168, 4: 402, 5: 361, 6: 495, 7: 152, 8: 414, 9: 155,
+  10: 168, 11: 402, 12: 511, 13: 388, 14: 495, 15: 361, 16: 414, 17: 152, 18: 430,
+};
+export const NOTES: Record<number, string> = {
+  1: "gentle opener, wind at your back", 2: "bunker eats anything short", 3: "all carry, club up",
+  4: "blind second — trust it", 5: "aim at the water tower", 6: "three shots, no heroes",
+  7: "shortest hole, longest walk", 8: "cart path is in play", 9: "downhill to the turn",
+  10: "downhill, wind off the left", 11: "bunker eats anything short", 12: "reachable if you send it",
+  13: "blind second — trust it", 14: "three shots, no heroes", 15: "aim at the water tower",
+  16: "cart path is in play", 17: "shortest hole, longest walk", 18: "card-wrecker. good luck",
+};
+
 export type RoundMode = "back9" | "full18";
 
 export const BACK_NINE = [10, 11, 12, 13, 14, 15, 16, 17, 18];

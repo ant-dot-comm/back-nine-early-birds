@@ -1,52 +1,45 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { FullSpinner } from "./components/ui";
+import { Dock } from "./components/paint";
 import SignIn from "./screens/SignIn";
 import ResetPassword from "./screens/ResetPassword";
 import SetName from "./screens/SetName";
 import Home from "./screens/Home";
+import RoundsArchive from "./screens/RoundsArchive";
 import NewRound from "./screens/NewRound";
 import ScoreEntry from "./screens/ScoreEntry";
 import Summary from "./screens/Summary";
 import Stats from "./screens/Stats";
 import Account from "./screens/Account";
-import RareNames from "./screens/RareNames";
+import Bag from "./screens/Bag";
+import Me from "./screens/Me";
 import PlayerProfile from "./screens/PlayerProfile";
+import Duels from "./screens/Duels";
 import Tournaments from "./screens/Tournaments";
 import CreateTournament from "./screens/CreateTournament";
 import TournamentDetail from "./screens/TournamentDetail";
 import JoinInvite from "./screens/JoinInvite";
 
+// Top-level tab routes that carry the floating dock.
+const DOCK_PATHS = ["/", "/rounds", "/stats", "/bag", "/me"];
+
 export default function App() {
   const { loading, profileLoading, session, profile, recovery } = useAuth();
   const location = useLocation();
 
-  // Invite landing: reachable in any auth state (handles its own sign-up flow).
   if (location.pathname === "/join") {
-    return (
-      <div className="app">
-        <JoinInvite />
-      </div>
-    );
+    return <div className="app"><JoinInvite /></div>;
   }
 
   let content;
+  let showDock = false;
 
   if (loading) {
-    content = (
-      <div className="screen">
-        <FullSpinner label="Loading…" />
-      </div>
-    );
+    content = <div className="screen"><FullSpinner label="Loading…" /></div>;
   } else if (recovery) {
-    // Arrived via a password-reset link: force setting a new password first.
-    content = (
-      <Routes>
-        <Route path="*" element={<ResetPassword />} />
-      </Routes>
-    );
+    content = <Routes><Route path="*" element={<ResetPassword />} /></Routes>;
   } else if (!session) {
-    // Signed out: only the auth screen is reachable.
     content = (
       <Routes>
         <Route path="/login" element={<SignIn />} />
@@ -54,14 +47,8 @@ export default function App() {
       </Routes>
     );
   } else if (!profile && profileLoading) {
-    // Signed in, profile still loading: hold on a spinner (avoids an onboarding flash).
-    content = (
-      <div className="screen">
-        <FullSpinner label="Loading…" />
-      </div>
-    );
+    content = <div className="screen"><FullSpinner label="Loading…" /></div>;
   } else if (!profile) {
-    // Signed in but genuinely no display name yet: force onboarding.
     content = (
       <Routes>
         <Route path="/welcome" element={<SetName />} />
@@ -69,15 +56,19 @@ export default function App() {
       </Routes>
     );
   } else {
+    showDock = DOCK_PATHS.includes(location.pathname);
     content = (
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/rounds" element={<RoundsArchive />} />
         <Route path="/rounds/new" element={<NewRound />} />
         <Route path="/rounds/:id/score" element={<ScoreEntry />} />
         <Route path="/rounds/:id" element={<Summary />} />
         <Route path="/stats" element={<Stats />} />
+        <Route path="/bag" element={<Bag />} />
+        <Route path="/me" element={<Me />} />
         <Route path="/account" element={<Account />} />
-        <Route path="/rare" element={<RareNames />} />
+        <Route path="/duels" element={<Duels />} />
         <Route path="/player/:id" element={<PlayerProfile />} />
         <Route path="/tournaments" element={<Tournaments />} />
         <Route path="/tournaments/new" element={<CreateTournament />} />
@@ -87,5 +78,10 @@ export default function App() {
     );
   }
 
-  return <div className="app">{content}</div>;
+  return (
+    <div className="app">
+      {content}
+      {showDock && <Dock />}
+    </div>
+  );
 }
