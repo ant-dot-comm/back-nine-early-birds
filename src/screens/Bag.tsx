@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getSecretRoster, createChallenge, getPublicBadges } from "../lib/db";
 import type { RareName, Badge } from "../lib/types";
@@ -40,6 +41,7 @@ export default function Bag() {
         {(["names", "badges"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} style={{ border: "none", background: "transparent", cursor: "pointer", font: "600 15px var(--sans)", color: tab === t ? C.tx : C.tx3, borderBottom: tab === t ? `2px solid ${C.flag}` : "2px solid transparent", padding: "0 0 5px" }}>{t === "names" ? "Names" : "Badges"}</button>
         ))}
+        <Link to="/duels" style={{ marginLeft: "auto", font: "600 12px var(--sans)", letterSpacing: ".08em", textTransform: "uppercase", color: C.sand }}>Duels ›</Link>
       </div>
 
       <div className="scroll">

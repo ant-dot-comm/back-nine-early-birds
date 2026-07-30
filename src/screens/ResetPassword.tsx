@@ -37,10 +37,10 @@ export default function ResetPassword() {
           style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 16 }}
         >
           <Logo width={200} />
-          <h1 className="h-serif" style={{ font: "600 22px var(--serif)", marginTop: 8 }}>
+          <h1 style={{ margin: 0, font: "300 24px var(--sans)", color: "var(--tx)", marginTop: 8 }}>
             This reset link has expired
           </h1>
-          <p style={{ margin: 0, font: "400 15px/1.6 var(--sans)", color: "var(--muted)" }}>
+          <p style={{ margin: 0, font: "400 15px/1.6 var(--sans)", color: "var(--tx-2)" }}>
             Reset links can only be used once. Head back and request a fresh one.
           </p>
           <button
@@ -84,9 +84,7 @@ export default function ResetPassword() {
           <Logo width={210} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <h1 className="h-serif" style={{ font: "600 24px var(--serif)" }}>
-            Set a new password
-          </h1>
+          <h1 className="display" style={{ fontSize: 26 }}>Set a new password</h1>
           <div className="field">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <label className="label" htmlFor="np">
@@ -95,7 +93,7 @@ export default function ResetPassword() {
               <button
                 type="button"
                 onClick={() => setShowPw((s) => !s)}
-                style={{ border: "none", background: "transparent", font: "500 12px var(--sans)", color: "var(--brass)", cursor: "pointer", padding: 0 }}
+                style={{ border: "none", background: "transparent", font: "600 12px var(--sans)", color: "var(--sand)", cursor: "pointer", padding: 0 }}
               >
                 {showPw ? "Hide" : "Show"}
               </button>

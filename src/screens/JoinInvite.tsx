@@ -56,10 +56,10 @@ export default function JoinInvite() {
       <div className="screen fade">
         <div className="pad safe-top" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 16 }}>
           <Logo width={210} />
-          <h1 className="h-serif" style={{ font: "600 22px var(--serif)", marginTop: 8 }}>{from} shared a round with you</h1>
-          <p style={{ margin: 0, font: "400 15px/1.6 var(--sans)", color: "var(--muted)" }}>
-            You're signed in as <b style={{ color: "var(--ink)" }}>{session.user.email}</b>. This invite is for{" "}
-            <b style={{ color: "var(--ink)" }}>{email0 || "someone else"}</b> — log out to create their account and claim the round.
+          <h1 style={{ margin: 0, font: "300 24px var(--sans)", color: "var(--tx)", marginTop: 8 }}>{from} shared a round with you</h1>
+          <p style={{ margin: 0, font: "400 15px/1.6 var(--sans)", color: "var(--tx-2)" }}>
+            You're signed in as <b style={{ color: "var(--tx)" }}>{session.user.email}</b>. This invite is for{" "}
+            <b style={{ color: "var(--tx)" }}>{email0 || "someone else"}</b> — log out to create their account and claim the round.
           </p>
           <button
             className="btn"
@@ -70,7 +70,7 @@ export default function JoinInvite() {
           </button>
           <button
             onClick={() => navigate("/")}
-            style={{ border: "none", background: "transparent", font: "500 14px var(--sans)", color: "var(--faint)", cursor: "pointer" }}
+            style={{ border: "none", background: "transparent", font: "500 14px var(--sans)", color: "var(--tx-3)", cursor: "pointer" }}
           >
             Go to my dashboard
           </button>
@@ -85,10 +85,10 @@ export default function JoinInvite() {
       <div className="pad safe-top" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, textAlign: "center" }}>
           <Logo width={230} />
-          <div className="card" style={{ padding: "16px 18px", background: "var(--surface)", borderColor: "var(--brass)" }}>
-            <p style={{ margin: 0, font: "500 15px/1.55 var(--sans)", color: "var(--muted)" }}>
-              <b style={{ color: "var(--green-900)" }}>{from}</b> shared your recent round score and invited you to join{" "}
-              <b style={{ color: "var(--green-900)" }}>Back 9 Early Birds</b>. Create your account to claim it.
+          <div className="card" style={{ padding: "16px 18px", borderRadius: 16, border: "1px solid var(--sand)" }}>
+            <p style={{ margin: 0, font: "500 15px/1.55 var(--sans)", color: "var(--tx-2)" }}>
+              <b style={{ color: "var(--sand)" }}>{from}</b> shared your recent round score and invited you to join{" "}
+              <b style={{ color: "var(--sand)" }}>Back 9 Early Birds</b>. Create your account to claim it.
             </p>
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function JoinInvite() {
           <div className="field">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <label className="label" htmlFor="jpw">Choose a password</label>
-              <button type="button" onClick={() => setShowPw((s) => !s)} style={{ border: "none", background: "transparent", font: "500 12px var(--sans)", color: "var(--brass)", cursor: "pointer", padding: 0 }}>
+              <button type="button" onClick={() => setShowPw((s) => !s)} style={{ border: "none", background: "transparent", font: "500 12px var(--sans)", color: "var(--sand)", cursor: "pointer", padding: 0 }}>
                 {showPw ? "Hide" : "Show"}
               </button>
             </div>
@@ -114,8 +114,8 @@ export default function JoinInvite() {
             {busy ? <span className="spin on-dark" /> : "Create account & claim my round"}
           </button>
           {error && <ErrorNote>{error}</ErrorNote>}
-          {notice && <p style={{ margin: 0, font: "500 13px/1.5 var(--sans)", color: "var(--green-700)", textAlign: "center" }}>{notice}</p>}
-          <button onClick={() => navigate("/login")} style={{ border: "none", background: "transparent", font: "500 14px var(--sans)", color: "var(--faint)", cursor: "pointer" }}>
+          {notice && <p style={{ margin: 0, font: "500 13px/1.5 var(--sans)", color: "var(--sand)", textAlign: "center" }}>{notice}</p>}
+          <button onClick={() => navigate("/login")} style={{ border: "none", background: "transparent", font: "500 14px var(--sans)", color: "var(--tx-3)", cursor: "pointer" }}>
             Already a member? Sign in
           </button>
         </div>
